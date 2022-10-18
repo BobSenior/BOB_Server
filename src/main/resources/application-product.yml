@@ -1,0 +1,47 @@
+spring:
+
+  config:
+    name: bobSenior
+    activate:
+      on-profile: product
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${BOB_RDS_URL}
+    username: ${BOB_RDS_USERNAME}
+    password: ${BOB_RDS_PASSWORD}
+#
+#  redis:
+#    host: ${BOB_REDIS_HOST}
+#    port: ${BOB_REDIS_PORT}
+
+#cloud:
+#  aws:
+#    credentials:
+#      accessKey: ${BOB_S3_ACCESSKEY}
+#      secretKey: ${BOB_S3_SECRETKEY}
+#    s3:
+#      bucket: ${BOB_S3_BUCKET}
+#    region:
+#      static: ${BOB_S3_REGION}
+#    stack:
+#      auto: false
+
+#mybatis:
+#  mapper-locations: mapper/**/*.xml
+#  configuration:
+#    map-underscore-to-camel-case: true
+#
+#sms:
+#  serviceId: ${SMS_SERVICE_ID}
+#  accessKey: ${SMS_ACCESSKEY}
+#  secretKey: ${SMS_SECRETKEY}
+#
+#
+#jwt:
+#  secret: ${BOB_JWT_SECRETKEY}
+#
+#duos:
+#  firebase:
+#    secret:
+#      path: ${BOB_FIREBASE_KEYPATH}
