@@ -16,4 +16,15 @@ public class UserController {
             return "error";
         }
     }
+
+//    @PostMapping("/signUp")
+//    public String signUp(){
+//        try{
+//            return "hello";
+//        }catch (Exception e){
+//            log.error(e);
+//            return "error";
+//        }
+//    }
+
 }
