@@ -51,10 +51,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-
-    - name: Make Zip File
-      run: zip -qq -r ./$GITHUB_SHA.zip .
-      shell: bash
         
     # (5) 빌드 결과물을 S3 버킷에 업로드
     - name: Upload to AWS S3
