@@ -19,10 +19,10 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry){
-        registry.enableSimpleBroker("/queue","/topic");
+        registry.enableSimpleBroker("/topic");
         registry.setApplicationDestinationPrefixes("/app");
         //msg보낼때는 /app으로 -> 변경가능
-        //구독신청 : topic, queue
+        //구독신청 : topic
 
     }
 
