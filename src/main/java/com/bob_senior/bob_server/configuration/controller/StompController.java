@@ -39,34 +39,33 @@ public class StompController {
 
     @MessageMapping("/stomp/init/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatDto enterChatRoom(ChatDto msg, @DestinationVariable int roomId){
+    public BaseResponse enterChatRoom(ChatDto msg, @DestinationVariable int roomId){
         //1. 새로 들어온 유저를 채팅방에 등록
         Integer userIdx = msg.getSenderIdx();
         if(!userService.checkUserExist(userIdx)){
-            //존재하지 않는 유저 예외 던지기
+            return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
         if(chatService.checkUserParticipantChatting(userIdx,roomId)){
-            //이미 존재 예외 던지기
+            return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         Timestamp ts = chatService.userParticipant(roomId,userIdx);
         msg.setType("INIT");
         String nickname = userService.getNickNameByIdx(msg.getSenderIdx());
         msg.setData(nickname + " 님이 입장하셨습니다!");
-        return msg;
+        return new BaseResponse<ChatDto>(msg);
     }
 
     @MessageMapping("/stomp/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatDto sendChatToMembers(ChatDto msg, @DestinationVariable int roomId){
+    public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable int roomId){
         //verify_if_chatroom_exist(roomId);
         Integer user = msg.getSenderIdx();
         if(!userService.checkUserExist(user)){
-
+            return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
         //해당 유저가 유효한 유저인지 검사 -> room내의 user인지?
         if(!chatService.checkUserParticipantChatting(roomId,user)){
-            //멤버 존재x 예외 던지기
-
+            return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         Long nowDate = System.currentTimeMillis();
         Timestamp timeStamp = new Timestamp(nowDate);
@@ -74,17 +73,17 @@ public class StompController {
         //채팅 db에 저장
         chatService.storeNewMessage(msg,timeStamp,roomId);
 
-        return msg;
+        return new BaseResponse<ChatDto>(msg);
     }
 
     @MessageMapping("/stomp/exit/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatDto exitChatRoom(@DestinationVariable int roomId, Integer sender){
+    public BaseResponse exitChatRoom(@DestinationVariable int roomId, Integer sender){
         if(!userService.checkUserExist(sender)){
-            //no user Exception
+            return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
         if(!chatService.checkUserParticipantChatting(roomId,sender)){
-            //no participant Exception
+            return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         ChatDto msg = new ChatDto();
         msg.setSenderIdx(sender);
@@ -93,7 +92,7 @@ public class StompController {
         chatService.deleteUserFromRoom(roomId, sender);
         String senderNick = userService.getNickNameByIdx(sender);
         msg.setData(senderNick + " 님이 퇴장하셨습니다");
-        return msg;
+        return new BaseResponse<ChatDto>(msg);
     }
 
     @MessageMapping("/stomp/vote/{roomId}")

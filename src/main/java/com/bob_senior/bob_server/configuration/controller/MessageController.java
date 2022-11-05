@@ -4,6 +4,7 @@ package com.bob_senior.bob_server.configuration.controller;
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
 import com.bob_senior.bob_server.domain.Chat.ChatPage;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
+import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.service.ChatService;
 import com.bob_senior.bob_server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,14 +53,16 @@ public class MessageController {
 
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
     @GetMapping("/chat/unread/{roomId}")
-    public BaseResponse<Long> getUnreadChatNum(@PathVariable int roomId, int userIdx){
+    public BaseResponse getUnreadChatNum(@PathVariable int roomId, int userIdx){
         //해당 유저가 valid한지 먼저 확인
         if(!userService.checkUserExist(userIdx)){
             //TODO : 유저 존재하지 않을 경우 handling - exception을 던져도 되고
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
 
         }
         if(!chatService.checkUserParticipantChatting(roomId,userIdx)){
             //TODO : 유저가 채팅방에 존재하지 않을시 처리
+            return new BaseResponse(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
     }

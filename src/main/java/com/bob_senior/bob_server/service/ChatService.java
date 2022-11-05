@@ -1,6 +1,7 @@
 package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.Chat.*;
+import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
 import com.bob_senior.bob_server.repository.ChatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class ChatService {
     }
 
     //채팅 페이지 가져오기
-    public ChatPage loadChatPageData(Pageable pageable, int roomIdx) throws Exception{
+    public ChatPage loadChatPageData(Pageable pageable, int roomIdx) throws BaseException {
         Page<ChatMessage> pages =  chatRepository.findByChatRoomIdx(roomIdx,pageable);
         List<ChatDto> chats = new ArrayList<>();
         for (ChatMessage page : pages) {
