@@ -1,14 +1,17 @@
 package com.bob_senior.bob_server.domain.vote;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
+import javax.websocket.OnOpen;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Vote {
 
     @Id
@@ -35,4 +38,7 @@ public class Vote {
 
     @Column
     private String voteType;
+
+    @Column
+    private String UUID;
 }

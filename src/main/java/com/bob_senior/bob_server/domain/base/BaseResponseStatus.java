@@ -14,7 +14,8 @@ public enum BaseResponseStatus {
     INVALID_USER(false,2001,"유효하지 않은 사용자입니다!"),
     ALREADY_PARTICIPATED_IN_ROOM(false,2002,"이미 참가중인 채팅방입니다!"),
     INVALID_CHATROOM_ACCESS(false,2003,"해당 채팅방에 접근할 수 없습니다!"),
-    ALREADY_VOTED(false,2004,"이미 참여한 투표입니다");
+    ALREADY_VOTED(false,2004,"이미 참여한 투표입니다"),
+    ALREADY_EXIST_VOTE_CONTENT(false,2005,"이미 존재하는 투표입니다");
 
 
     private final boolean isSuccess;

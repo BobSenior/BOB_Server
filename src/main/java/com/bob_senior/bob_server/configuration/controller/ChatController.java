@@ -1,27 +1,28 @@
 package com.bob_senior.bob_server.configuration.controller;
 
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
-import com.bob_senior.bob_server.domain.base.BaseException;
+import com.bob_senior.bob_server.domain.Chat.ChatPage;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
-import com.bob_senior.bob_server.domain.vote.UserVoteDTO;
-import com.bob_senior.bob_server.domain.vote.VoteResult;
 import com.bob_senior.bob_server.service.ChatService;
 import com.bob_senior.bob_server.service.UserService;
 import com.bob_senior.bob_server.service.VoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.sql.Timestamp;
 
 @Slf4j
 @Controller
-public class StompController {
+public class ChatController {
 
     private final UserService userService;
     private final ChatService chatService;
@@ -29,8 +30,8 @@ public class StompController {
     private final VoteService voteService;
 
     @Autowired
-    public StompController(SimpMessageSendingOperations simpMessageSendingOperations,
-    UserService userService, ChatService chatService,VoteService voteService) {
+    public ChatController(SimpMessageSendingOperations simpMessageSendingOperations,
+                          UserService userService, ChatService chatService, VoteService voteService) {
         this.userService = userService;
         this.chatService = chatService;
         this.simpMessageSendingOperations = simpMessageSendingOperations;
@@ -95,29 +96,53 @@ public class StompController {
         return new BaseResponse<ChatDto>(msg);
     }
 
-    @MessageMapping("/stomp/vote/{roomId}")
-    @SendTo("/topic/room/{roomId}")
-    public BaseResponse voteFromUser(@DestinationVariable int roomId, UserVoteDTO userVoteDTO){
-        //1. 해당 유저가 적절한지 먼저 검사
-        if(!userService.checkUserExist(userVoteDTO.getUserIdx())){
-            return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
+    //1. 채팅을 페이지 단위로 받아오기
+    @GetMapping("/chat/load/{roomId}")
+    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable int roomId, final Pageable pageable){
+        //pageable = requestParam으로 받음
+        //format :
+        try {
+            chatService.loadChatPageData(pageable,roomId);
+            //해당 room의 최근 x개의 채팅을 load
+        } catch (Exception e) {
+            e.printStackTrace();
+            //TODO : 예외처리?
         }
-        //2. 해당 유저가 해당 방에 참가중인지 검사
-        if(!chatService.checkUserParticipantChatting(roomId,userVoteDTO.getUserIdx())){
-            return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
+        ChatPage chats = null;
+        try {
+            chats = chatService.loadChatPageData(pageable,roomId);
+        } catch (Exception e) {
+            //no page Exception..
         }
-        //3. 해당 vote가 valid한지 검사
-        if(!voteService.checkIfVoteIsValid(roomId,userVoteDTO.getVoteIdx())){
-            //invalid vote Exception
-            return new BaseResponse<>(BaseResponseStatus.ALREADY_VOTED);
-        }
-        try{
-            VoteResult vr = voteService.applyUserSelectionToVote(userVoteDTO);
-            return new BaseResponse<VoteResult>(vr);
-        }
-        catch(BaseException e){
-            return new BaseResponse<>(e.getStatus());
-        }
+        return new BaseResponse<>(chats);
     }
 
+    //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
+    @GetMapping("/chat/unread/{roomId}")
+    public BaseResponse getUnreadChatNum(@PathVariable int roomId, int userIdx){
+        //해당 유저가 valid한지 먼저 확인
+        if(!userService.checkUserExist(userIdx)){
+            //TODO : 유저 존재하지 않을 경우 handling - exception을 던져도 되고
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+
+        }
+        if(!chatService.checkUserParticipantChatting(roomId,userIdx)){
+            //TODO : 유저가 채팅방에 존재하지 않을시 처리
+            return new BaseResponse(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
+        }
+        return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
+    }
+
+    //test method
+    @GetMapping("test")
+    public void addMsg(){
+        ChatDto chat = ChatDto.builder()
+                .senderIdx(1111)
+                .type("MESSAGE")
+                .channelId("2222")
+                .data("epoch")
+                .build();
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        chatService.storeNewMessage(chat,ts,1);
+    }
 }
