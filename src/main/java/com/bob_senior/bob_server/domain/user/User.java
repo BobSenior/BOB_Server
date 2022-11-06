@@ -39,4 +39,9 @@ public class User {
     @Column(name="authorizedStatus")
     private String authorizedStatus;
 
+    @Column(name = "uuid")
+    private String uuid;
+
+    @Column
+    private String schoolId;
 }

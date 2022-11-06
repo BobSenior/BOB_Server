@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class VoteResult {
+public class ShownVote {
 
     private Integer voteIdx;
 

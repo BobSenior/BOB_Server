@@ -1,8 +1,14 @@
 package com.bob_senior.bob_server.domain.Post;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity(name = "Post")
 public class Post {
     @Id
@@ -29,4 +35,7 @@ public class Post {
 
     @Column(name = "viewCount")
     private Integer viewCount;
+
+    @Column(name="meetingDate")
+    private LocalDateTime meetingDate;
 }

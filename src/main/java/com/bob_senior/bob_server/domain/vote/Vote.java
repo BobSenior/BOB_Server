@@ -3,7 +3,6 @@ package com.bob_senior.bob_server.domain.vote;
 import lombok.*;
 
 import javax.persistence.*;
-import javax.websocket.OnOpen;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,10 +18,13 @@ public class Vote {
     private Integer voteIdx;
 
     @Column
-    private Integer voteRoomIdx;
+    private Integer postIdx;
 
     @Column
-    private String voteName;
+    private Integer creatorIdx;
+
+    @Column
+    private String title;
 
     @Column
     private LocalDateTime createdAt;
