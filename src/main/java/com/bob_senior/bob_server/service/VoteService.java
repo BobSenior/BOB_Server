@@ -23,18 +23,20 @@ public class VoteService {
     private final ChatRepository chatRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
 
 
 
     @Autowired
-    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository) {
+    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository, UserRepository userRepository) {
         this.voteRepository = voteRepository;
         this.voteParticipatedRepository = voteParticipatedRepository;
         this.voteRecordRepository = voteRecordRepository;
         this.chatRepository = chatRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -48,14 +50,41 @@ public class VoteService {
         return voteRepository.existsVoteByPostIdxAndActivated(postIdx,1);
     }
 
-    public ShownVote getMostRecentVoteInChatroom(int postIdx) throws BaseException{
-        Vote vote = voteRepository.findTop1ByPostIdxANDActivated(postIdx,1);
-        return ShownVote.builder()
+
+
+
+    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(int postIdx,int userIdx) throws BaseException{
+        //1. 현재 postIdx에 걸린 activated vote를 전부 가져오기
+        List<Vote> lists = voteRepository.findAllByActivatedAndPostIdx("ACTIVATED",postIdx);
+
+        List<ShownVoteHeadDTO> dtos = new ArrayList<>();
+        for (Vote vote : lists) {
+            dtos.add(
+                    ShownVoteHeadDTO.builder()
+                            .title(vote.getTitle())
+                            .voteIdx(vote.getVoteIdx())
+                            .participatedNum(vote.getParticipatedNum())
+                            .participated(
+                                    voteParticipatedRepository.existsVoteParticipatedByUserIdxAndAndVoteIdx(userIdx,vote.getVoteIdx())
+                            )
+                            .build()
+            );
+        }
+        return dtos;
+    }
+
+
+    public ShownVoteDTO getVoteByVoteIdx(int voteIdx) throws BaseException{
+        Vote vote = voteRepository.findVoteByVoteIdx(voteIdx);
+        List<VoteRecord> records = voteRecordRepository.findAllByVoteId_VoteIdx(voteIdx);
+        return ShownVoteDTO.builder()
                 .voteIdx(vote.getVoteIdx())
-                .createdAt(vote.getCreatedAt())
+                .writerIdx(vote.getCreatorIdx())
+                .nickname(userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName())
                 .title(vote.getTitle())
-                .tuples(voteRecordRepository.findAllByVoteId_VoteIdx(vote.getVoteIdx()))
-                .total_participated(vote.getParticipatedNum())
+                .records(records)
+                .createdAt(vote.getCreatedAt())
+                .totalParticipated(vote.getParticipatedNum())
                 .build();
     }
 
@@ -63,7 +92,7 @@ public class VoteService {
 
 
     @Transactional
-    public ShownVote applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
+    public ShownVoteDTO applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
         Vote vote = voteRepository.findVoteByVoteIdx(userVoteDTO.getVoteIdx());
         // 해당 유저가 이미 vote 했는지 확인
         boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndAndVoteIdx(
@@ -95,12 +124,14 @@ public class VoteService {
         );
         //4. 현재까지의 voteResult를 모두에게 spread
 
-        return ShownVote.builder()
+        return ShownVoteDTO.builder()
                 .voteIdx(vote.getVoteIdx())
+                .writerIdx(vote.getCreatorIdx())
+                .nickname(userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName())
                 .title(vote.getTitle())
                 .createdAt(vote.getCreatedAt())
-                .tuples(voteRecordRepository.findAllByVoteId_VoteIdx(userVoteDTO.getVoteIdx()))
-                .total_participated(vote.getParticipatedNum())
+                .totalParticipated(vote.getParticipatedNum())
+                .records(voteRecordRepository.findAllByVoteId_VoteIdx(userVoteDTO.getVoteIdx()))
                 .build();
     }
 
@@ -111,7 +142,7 @@ public class VoteService {
     public ShownVoteDTO makeNewVote(MakeVoteDTO makeVoteDTO, LocalDateTime ldt, Integer roomIdx) throws BaseException{
 
         //0 . 이미 존재하는 vote인지 한번 검사 - votename & timestamp로 검사하면 될듯?
-        if(voteRepository.existsVoteByVoteNameAAndActivated(makeVoteDTO.getTitle(), ldt)){
+        if(voteRepository.existsVoteByVoteNameAndActivated(makeVoteDTO.getTitle(), ldt)){
             throw new BaseException(BaseResponseStatus.ALREADY_EXIST_VOTE_CONTENT);
         }
 
@@ -119,7 +150,7 @@ public class VoteService {
         List<String> list = makeVoteDTO.getContents();
         ArrayList<VoteRecord> records = new ArrayList<>();
 
-        //항목번호는 1부터 시작
+        //항목번호는 1부터 시작 -> generatedValue그대로 사용
 
         String uuid = UUID.randomUUID().toString();
 
@@ -128,7 +159,7 @@ public class VoteService {
                 .title(makeVoteDTO.getTitle())
                 .creatorIdx(makeVoteDTO.getMakerIdx())
                 .createdAt(ldt)
-                .isActivated(true)
+                .isActivated("ACTIVATE")
                 .participatedNum(0)
                 .maxNum(Math.toIntExact(chatParticipantRepository.countChatParticipantById_ChatRoomIdx(roomIdx)))
                 .voteType("NORMAL").UUID(uuid)
@@ -136,6 +167,7 @@ public class VoteService {
         //voteIdx는 db에 의한 자동생성... 일단 생성한 뒤에 가져오는게 best->concurrency problem..?
 
         Vote vote = voteRepository.findVoteByUUID(uuid);
+        //db에 의해 생성된 voteIdx가져오기
 
         int select_count = 1;
         for (String s : list) {
@@ -149,7 +181,15 @@ public class VoteService {
             voteRecordRepository.save(record);
             records.add(record);
         }
-        return new ShownVoteDTO(vote,records);
+        return ShownVoteDTO.builder()
+                .voteIdx(vote.getVoteIdx())
+                .writerIdx(vote.getCreatorIdx())
+                .nickname(userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName())
+                .createdAt(vote.getCreatedAt())
+                .title(vote.getTitle())
+                .totalParticipated(vote.getParticipatedNum())
+                .records(records)
+                .build();
     }
 
     @Transactional

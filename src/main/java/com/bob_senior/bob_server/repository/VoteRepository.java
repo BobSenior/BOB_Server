@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface VoteRepository extends JpaRepository<Vote,Integer> {
 
@@ -21,7 +22,7 @@ public interface VoteRepository extends JpaRepository<Vote,Integer> {
     @Query(value = "select v.voteIdx from Vote v where v.UUID = :uuid")
     Integer getVoteIdxByUUID(@Param("uuid") String uuid);
 
-    boolean existsVoteByVoteNameAAndActivated(String voteName, LocalDateTime activated);
+    boolean existsVoteByVoteNameAndActivated(String voteName, LocalDateTime activated);
 
     boolean existsVoteByVoteIdxAndCreatorIdx(Integer voteIdx, Integer creatorIdx);
 
@@ -32,5 +33,7 @@ public interface VoteRepository extends JpaRepository<Vote,Integer> {
     boolean existsVoteByPostIdxAndActivated(Integer postIdx, int activated);
 
     Vote findTop1ByPostIdxANDActivated(Integer postIdx,Integer activated);
+
+    List<Vote> findAllByActivatedAndPostIdx(String activated, Integer postIdx);
 
 }

@@ -30,7 +30,7 @@ public class Vote {
     private LocalDateTime createdAt;
 
     @Column
-    private boolean isActivated;
+    private String isActivated;
 
     @Column
     private Integer participatedNum;
