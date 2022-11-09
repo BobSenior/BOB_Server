@@ -13,7 +13,7 @@ import java.io.Serializable;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostAndUser implements Serializable {
+public class PostUser implements Serializable {
 
     private Integer postIdx;
 

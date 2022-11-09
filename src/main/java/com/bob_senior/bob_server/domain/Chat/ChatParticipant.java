@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 public class ChatParticipant {
 
     @EmbeddedId
-    private RoomAndUser id;
+    private ChatNUser id;
 
     @Column(length = 45)
     private String status;

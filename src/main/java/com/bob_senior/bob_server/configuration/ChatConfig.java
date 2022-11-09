@@ -26,4 +26,5 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 
     }
 
+
 }

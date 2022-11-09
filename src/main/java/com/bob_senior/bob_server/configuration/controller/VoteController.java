@@ -44,6 +44,7 @@ public class VoteController {
      */
 
 
+    //현재 채팅방에 activated의 vote리스트 가져오기
     @GetMapping("/appointment/vote/list/{roomIdx}")
     public BaseResponse getCurrentActivatingVoteList(@PathVariable Integer roomIdx,Integer userIdx){
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
@@ -62,6 +63,7 @@ public class VoteController {
 
 
 
+    //특정vote데이터 가져오기
     @GetMapping("/appointment/vote/{roomIdx}/{voteIdx}")
     public BaseResponse getSpecificVoteData(@PathVariable Integer roomIdx,@PathVariable Integer voteIdx){
         //1. 해당 vote가 유효한지 검사
@@ -146,7 +148,7 @@ public class VoteController {
     @PostMapping("/vote/terminate/{roomId}")
     public BaseResponse terminateVote(@PathVariable int roomId,TerminateVoteDTO terminateVoteDTO){
         //Q)terminate이후 바로 투표내용을 적용할것인가?
-        //TODO : problem1 - 투표 결과 동률이 나올경우 어찌 처리할것인가? 2. 바로 반영 or 발주자가 알아서?
+        //TODO : problem1 - 투표 결과 동률이 나올경우 어찌 처리할것인가?   2. 바로 반영 or owner가 알아서?
         if(!userService.checkUserExist(terminateVoteDTO.getTerminatorIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
@@ -154,7 +156,6 @@ public class VoteController {
             return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         try{
-
             voteService.makeTerminateVote(roomId,terminateVoteDTO);
             return new BaseResponse("clear");
 

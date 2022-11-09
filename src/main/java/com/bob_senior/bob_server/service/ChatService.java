@@ -77,7 +77,7 @@ public class ChatService {
     //해당 유저를 해당 채팅방에 참여시키기
     //필요한 데이터 : chatRoomIdx, chatParticipantIdx, status, lastRead
     public Timestamp userParticipant(Integer chatRoomIdx, Integer chatParticipantIdx){
-        RoomAndUser rau = new RoomAndUser(chatRoomIdx,chatParticipantIdx);
+        ChatNUser rau = new ChatNUser(chatRoomIdx,chatParticipantIdx);
         Long datetime = System.currentTimeMillis();
         Timestamp timestamp = new Timestamp(datetime);
         ChatParticipant cp = ChatParticipant.builder()
@@ -104,7 +104,7 @@ public class ChatService {
 
     //user가 방 밖으로 나갈시 disable시키기
     public void deleteUserFromRoom(int roomId, Integer sender) {
-        RoomAndUser rau = new RoomAndUser(roomId,sender);
+        ChatNUser rau = new ChatNUser(roomId,sender);
         ChatParticipant cp = chatParticipantRepository.findChatParticipantById(rau);
         cp.setStatus("Q");
         chatParticipantRepository.save(cp);

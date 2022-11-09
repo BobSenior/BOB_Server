@@ -2,8 +2,11 @@ package com.bob_senior.bob_server.configuration.controller;
 
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
 import com.bob_senior.bob_server.domain.Chat.ChatPage;
+import com.bob_senior.bob_server.domain.Chat.SessionAndClientRecord;
+import com.bob_senior.bob_server.domain.Chat.SessionRecord;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
+import com.bob_senior.bob_server.repository.SessionRecordRepository;
 import com.bob_senior.bob_server.service.ChatService;
 import com.bob_senior.bob_server.service.UserService;
 import com.bob_senior.bob_server.service.VoteService;
@@ -28,16 +31,19 @@ public class ChatController {
     private final ChatService chatService;
     private final SimpMessageSendingOperations simpMessageSendingOperations;
     private final VoteService voteService;
+    private final SessionRecordRepository sessionRecordRepository;
 
     @Autowired
     public ChatController(SimpMessageSendingOperations simpMessageSendingOperations,
-                          UserService userService, ChatService chatService, VoteService voteService) {
+                          UserService userService, ChatService chatService, VoteService voteService, SessionRecordRepository sessionRecordRepository) {
         this.userService = userService;
         this.chatService = chatService;
         this.simpMessageSendingOperations = simpMessageSendingOperations;
         this.voteService = voteService;
+        this.sessionRecordRepository = sessionRecordRepository;
     }
 
+    //채팅방에 참여
     @MessageMapping("/stomp/init/{roomId}")
     @SendTo("/topic/room/{roomId}")
     public BaseResponse enterChatRoom(ChatDto msg, @DestinationVariable int roomId){
@@ -56,6 +62,7 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+    //채팅보내기
     @MessageMapping("/stomp/{roomId}")
     @SendTo("/topic/room/{roomId}")
     public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable int roomId){
@@ -77,6 +84,7 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+    //채팅방 나가기
     @MessageMapping("/stomp/exit/{roomId}")
     @SendTo("/topic/room/{roomId}")
     public BaseResponse exitChatRoom(@DestinationVariable int roomId, Integer sender){
@@ -94,6 +102,13 @@ public class ChatController {
         String senderNick = userService.getNickNameByIdx(sender);
         msg.setData(senderNick + " 님이 퇴장하셨습니다");
         return new BaseResponse<ChatDto>(msg);
+    }
+
+    @MessageMapping("/stomp/record/{roomId}")
+    public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable int roomId, SessionAndClientRecord sessionAndClientRecord){
+        //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
+        sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomId));
+        return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
     //1. 채팅을 페이지 단위로 받아오기

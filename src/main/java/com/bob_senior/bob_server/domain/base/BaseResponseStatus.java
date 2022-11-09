@@ -18,7 +18,11 @@ public enum BaseResponseStatus {
     ALREADY_EXIST_VOTE_CONTENT(false,2005,"이미 존재하는 투표입니다"),
     IS_NOT_OWNER_OF_VOTE(false,2006,"해당 투표를 종료할 권한이 없습니다"),
     NO_VOTE_IN_CHATROOM(false,2007,"현재 활성화된 투표가 없습니다"),
-    INVALID_VOTE_ACCESS(false, 2008,"유효하지 않은 투표정보입니다.");
+    INVALID_VOTE_ACCESS(false, 2008,"유효하지 않은 투표정보입니다."),
+    NON_EXIST_POSTIDX(false,2009,"존재하지 않는 게시글입니다"),
+    UNABLE_TO_MAKE_REQUEST_IN_POST(false,2010,"더이상 해당 글에 참여할 수 없습니다"),
+    INVALID_ACCESS_TO_APPOINTMENT(false,2011,"해당 약속에 대한 권한이 없습니다"),
+    NON_EXIST_POST_PARTICIPATION(false, 2012,"존재하지 않는 참가요청입니다");
 
 
     private final boolean isSuccess;

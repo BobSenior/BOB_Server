@@ -44,4 +44,13 @@ public class User {
 
     @Column
     private String schoolId;
+
+    @Column
+    private String imageURL;
+
+    @Column
+    private String department;
+
+    @Column
+    private String school;
 }

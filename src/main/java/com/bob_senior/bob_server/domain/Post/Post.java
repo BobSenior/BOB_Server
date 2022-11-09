@@ -38,4 +38,13 @@ public class Post {
 
     @Column(name="meetingDate")
     private LocalDateTime meetingDate;
+
+    @Column
+    private String imageURL;
+
+    @Column
+    private String meetingType;
+
+    @Column
+    private Integer participantLimit;
 }
