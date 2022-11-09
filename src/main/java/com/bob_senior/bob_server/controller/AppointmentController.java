@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.configuration.controller;
+package com.bob_senior.bob_server.controller;
 
 import com.bob_senior.bob_server.domain.appointment.AppointmentParticipantReqDTO;
 import com.bob_senior.bob_server.domain.appointment.HandleRequestDTO;

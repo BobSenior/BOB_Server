@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.configuration.controller;
+package com.bob_senior.bob_server.controller;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
