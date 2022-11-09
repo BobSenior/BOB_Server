@@ -109,4 +109,8 @@ public class ChatService {
         cp.setStatus("Q");
         chatParticipantRepository.save(cp);
     }
+
+    public void activateChatParticipation(Integer userIdx, int roomId) {
+        chatParticipantRepository.activateParticipation(userIdx,roomId);
+    }
 }

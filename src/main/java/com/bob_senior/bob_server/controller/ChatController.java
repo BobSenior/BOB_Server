@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.configuration.controller;
+package com.bob_senior.bob_server.controller;
 
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
 import com.bob_senior.bob_server.domain.Chat.ChatPage;
@@ -107,6 +107,7 @@ public class ChatController {
     @MessageMapping("/stomp/record/{roomId}")
     public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable int roomId, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
+        chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomId);
         sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomId));
         return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
@@ -133,6 +134,7 @@ public class ChatController {
     }
 
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
+    //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
     public BaseResponse getUnreadChatNum(@PathVariable int roomId, int userIdx){
         //해당 유저가 valid한지 먼저 확인
