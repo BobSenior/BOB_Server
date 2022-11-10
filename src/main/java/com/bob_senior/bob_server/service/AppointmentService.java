@@ -40,6 +40,9 @@ public class AppointmentService {
         this.chatParticipantRepository = chatParticipantRepository;
     }
 
+
+
+
     public AppointmentViewDTO getAppointmentData(Integer postIdx) throws BaseException {
         Post post = postRepository.findPostByPostIdx(postIdx);
 
@@ -79,6 +82,9 @@ public class AppointmentService {
                 .build();
     }
 
+
+
+
     public List<AppointmentHeadDTO> getUserWaitingAppointment(Integer userIdx, Pageable pageable) throws BaseException{
         //해당 유저의 waiting상태의 request을 전부 가져오기
         List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostAndUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
@@ -111,6 +117,9 @@ public class AppointmentService {
         }
         return data;
     }
+
+
+
 
     public List<AppointmentHeadDTO> getUserParticipatedAppointment(Integer userIdx, Pageable pageable) throws BaseException{
 
@@ -145,6 +154,9 @@ public class AppointmentService {
         return data;
     }
 
+
+
+
     public void makeNewPostParticipation(int postIdx, int userIdx) throws BaseException{
         //1. 일단 방이 존재하는지 확인
         boolean exist = postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"ACTIVATE");
@@ -170,6 +182,9 @@ public class AppointmentService {
                 .build());
     }
 
+
+
+
     public boolean isOwnerOfPost(Integer userIdx, Integer postIdx) {
         //내가 해당 게시글의 owner인지 확인
         Post post = postRepository.findPostByPostIdx(postIdx);
@@ -179,9 +194,15 @@ public class AppointmentService {
 
     }
 
+
+
+
     public boolean isPostExist(Integer postIdx) {
         return postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"ACTIVATE");
     }
+
+
+
 
     public List<SimplifiedUserProfileDTO> getAllRequestInPost(Integer postIdx, Pageable pageable) {
         //모든 request의 head를 가져온다.
@@ -199,10 +220,20 @@ public class AppointmentService {
         return data;
     }
 
+
+
+
     public void determineRequestStatus(Integer postIdx, Integer requesterIdx, boolean accept) throws BaseException{
         //1. 해당 request가 존재했는지 확인하는게 우선
         boolean isExist = postParticipantRepository.existsById(new PostUser(postIdx,requesterIdx));
         if(!isExist) throw new BaseException(BaseResponseStatus.NON_EXIST_POST_PARTICIPATION);
+        Post post = postRepository.findPostByPostIdx(postIdx);
+        int total = post.getParticipantLimit();
+        long curr = postParticipantRepository.countById_PostIdxAndStatus(postIdx,"PARTICIPATE");
+        if(total - curr <=0){
+            //더이상 참여 불가능 ->
+            throw new BaseException(BaseResponseStatus.UNABLE_TO_PARTICIPATE_IN_POST);
+        }
         //2. 존재할 경우 -> accept에 따라 다르게 처리
         if(accept){
             //true -> 해당 request를 받아들일 경우
@@ -210,10 +241,92 @@ public class AppointmentService {
             postParticipantRepository.changePostParticipationStatus("PARTICIPATE",postIdx,requesterIdx);
             //2. 그 후 해당 post의 chatroom에 추가 ->
             chatParticipantRepository.save(new ChatParticipant(new ChatNUser(postIdx,requesterIdx),"A",null));
+            changeRecruitmentStatusIfFull(post, total, curr);
         }
         else{
             //false일 경우 -> requst를 거절
             postParticipantRepository.changePostParticipationStatus("REJECT",postIdx,requesterIdx);
+        }
+    }
+
+
+
+
+    //해당 유저가 접근가능한 약속 리스트 전부 가져오기
+    public List<AppointmentHeadDTO> getAvailableAppointmentList(Integer userIdx, Pageable pageable) {
+        //1. 유저의 소속정보 가져오기(school, dep, year)
+        User user = userRepository.findUserByUserIdx(userIdx);
+        List<Post> posts = postRepository.getAllThatCanParticipant(user.getDepartment()).getContent();
+        List<AppointmentHeadDTO> data = new ArrayList<>();
+        for (Post post : posts) {
+            User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
+            data.add(
+                    AppointmentHeadDTO.builder()
+                            .title(post.getTitle())
+                            .imageUrl(post.getImageURL())
+                            .writer(
+                                    SimplifiedUserProfileDTO.builder()
+                                            .nickname(writer.getNickName())
+                                            .department(writer.getDepartment())
+                                            .schoolId(writer.getSchoolId())
+                                            .school(writer.getSchool())
+                                            .build()
+                            )
+                            .location(post.getPlace())
+                            .meetingAt(post.getMeetingDate())
+                            .type(post.getMeetingType())
+                            .status(post.getRecruitmentStatus())
+                            .build()
+            );
+        }
+    return data;
+    }
+
+
+
+
+    //해당 postIdx로 uuid의 유저를 초대
+    public void inviteUserByUUID(String invitedUUID, Integer postIdx) throws BaseException{
+        //일단 postIdx에 참여 가능여부를 확인
+        Post post = postRepository.findPostByPostIdx(postIdx);
+        int total = post.getParticipantLimit();
+        //현재 참여중인 user의 수
+        long curr = postParticipantRepository.countById_PostIdxAndStatus(postIdx,"PARTICIPATE");
+
+        //더이상 참여가 불가능한 경우
+        if(total - curr <=0){
+            //더이상 참여가 불가능
+            throw new BaseException(BaseResponseStatus.UNABLE_TO_PARTICIPATE_IN_POST);
+        }
+        //uuid로 일단 유저 가져오기
+        User user = userRepository.findByUuid(invitedUUID);
+
+        //이미 참여중인 경우
+        if(postParticipantRepository.existsByIdAndAndStatus(new PostUser(postIdx,user.getUserIdx()),"PARTICIPATE")){
+            throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
+        }
+
+        //참여시키기 1. postParticipant에 추가 + chatParticipant에 추가
+        postParticipantRepository.save(PostParticipant.builder()
+                .id(new PostUser(postIdx,user.getUserIdx()))
+                .status("PARTICIPATE")
+                .build()
+        );
+        chatParticipantRepository.save(
+                ChatParticipant.builder()
+                        .id(new ChatNUser(postIdx, user.getUserIdx()))
+                        .status("A")
+                        .build()
+        );
+
+        //참여 이후 만약 total과 같아질시 recruitment status를 "finish"로 바꾸기
+        changeRecruitmentStatusIfFull(post, total, curr);
+    }
+
+    private void changeRecruitmentStatusIfFull(Post post, int total, long curr) {
+        if(curr +1 == total){
+            post.setRecruitmentStatus("finish");
+            postRepository.save(post);
         }
     }
 }

@@ -10,11 +10,13 @@ import com.bob_senior.bob_server.service.UserService;
 import com.bob_senior.bob_server.service.VoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 
@@ -46,14 +48,14 @@ public class VoteController {
 
     //현재 채팅방에 activated의 vote리스트 가져오기
     @GetMapping("/appointment/vote/list/{roomIdx}")
-    public BaseResponse getCurrentActivatingVoteList(@PathVariable Integer roomIdx,Integer userIdx){
+    public BaseResponse getCurrentActivatingVoteList(@PathVariable Integer roomIdx, @RequestBody Integer userIdx, Pageable pageable){
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
             return new BaseResponse(BaseResponseStatus.NO_VOTE_IN_CHATROOM);
         }
         //투표가 존재시 가장 최근의 투표 1개만 가져온다.
         //option 2 : 현재 activated인 리스트를 전부 가져와서 head만 보여주고, 각 head를 선택하면 투표화면으로 넘어가게?
         try{
-            return new BaseResponse(voteService.getMostRecentVoteInChatroom(roomIdx,userIdx));
+            return new BaseResponse(voteService.getMostRecentVoteInChatroom(roomIdx,userIdx,pageable));
         }
         catch(BaseException e){
             return new BaseResponse(e.getStatus());

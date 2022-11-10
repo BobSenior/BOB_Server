@@ -1,6 +1,8 @@
 package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.vote.Vote;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -34,6 +36,6 @@ public interface VoteRepository extends JpaRepository<Vote,Integer> {
 
     Vote findTop1ByPostIdxANDActivated(Integer postIdx,Integer activated);
 
-    List<Vote> findAllByActivatedAndPostIdx(String activated, Integer postIdx);
+    Page<Vote> findAllByActivatedAndPostIdx(String activated, Integer postIdx, Pageable pageable);
 
 }

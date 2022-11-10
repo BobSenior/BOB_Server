@@ -47,4 +47,7 @@ public class Post {
 
     @Column
     private Integer participantLimit;
+
+    @Column
+    private String participantConstraint;
 }

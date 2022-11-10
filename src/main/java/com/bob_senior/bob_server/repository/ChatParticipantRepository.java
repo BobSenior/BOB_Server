@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, ChatNUser> {
 
@@ -34,4 +35,7 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
     @Modifying
     @Query(value = "update ChatParticipant cp set cp.status = 'A' where cp.id.chatParticipantIdx = :userIdx and cp.id.chatRoomIdx = :roomIdx")
     void activateParticipation(@Param("userIdx") Integer userIdx, @Param("roomIdx") Integer roomIdx);
+
+    @Query(value = "select cp from ChatParticipant cp where cp.status = 'Q' and cp.id.chatParticipantIdx = :userIdx")
+    List<ChatParticipant> getTotalUnreadChatNumber(@Param("userIdx") Integer userIdx);
 }

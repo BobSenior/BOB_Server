@@ -5,6 +5,7 @@ import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.vote.*;
 import com.bob_senior.bob_server.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,9 +54,9 @@ public class VoteService {
 
 
 
-    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(int postIdx,int userIdx) throws BaseException{
+    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(int postIdx, int userIdx, Pageable pageable) throws BaseException{
         //1. 현재 postIdx에 걸린 activated vote를 전부 가져오기
-        List<Vote> lists = voteRepository.findAllByActivatedAndPostIdx("ACTIVATED",postIdx);
+        List<Vote> lists = voteRepository.findAllByActivatedAndPostIdx("ACTIVATED",postIdx,pageable).getContent();
 
         List<ShownVoteHeadDTO> dtos = new ArrayList<>();
         for (Vote vote : lists) {
@@ -201,7 +202,7 @@ public class VoteService {
         }
         //2. 투표를 종료시키기/투표 결과 받아오기
         voteRepository.updateStatus(false, terminateVoteDTO.getVoteIdx());
-        VoteRecord vr = voteRecordRepository.findTop1ByCount();
+        VoteRecord vr = voteRecordRepository.findFirstByVoteId_VoteIdxOrderByCountDesc(terminateVoteDTO.getVoteIdx());
 
         //3. 투표의 결과를 반영할지.. 일단은 time만 반영한다고 가정해보자.
         //

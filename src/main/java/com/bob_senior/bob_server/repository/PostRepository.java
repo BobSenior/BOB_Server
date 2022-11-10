@@ -1,6 +1,7 @@
 package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.Post.Post;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +31,8 @@ public interface PostRepository extends JpaRepository<Post,Integer> {
 
     @Query(value = "select p.participantLimit from Post p where p.postIdx =:postIdx")
     int getMaximumParticipationNumFromPost(@Param("postIdx") Integer postIdx);
+
+    //activate이면서 + constraint가 ANY or input과 동일한 것들을 가져오기
+    @Query(value = "select p from Post p where p.recruitmentStatus = 'ACTIVATE' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
+    Page<Post> getAllThatCanParticipant(@Param("dep") String dep);
 }

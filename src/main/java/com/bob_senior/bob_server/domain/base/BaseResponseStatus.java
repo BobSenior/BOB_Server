@@ -22,7 +22,8 @@ public enum BaseResponseStatus {
     NON_EXIST_POSTIDX(false,2009,"존재하지 않는 게시글입니다"),
     UNABLE_TO_MAKE_REQUEST_IN_POST(false,2010,"더이상 해당 글에 참여할 수 없습니다"),
     INVALID_ACCESS_TO_APPOINTMENT(false,2011,"해당 약속에 대한 권한이 없습니다"),
-    NON_EXIST_POST_PARTICIPATION(false, 2012,"존재하지 않는 참가요청입니다");
+    NON_EXIST_POST_PARTICIPATION(false, 2012,"존재하지 않는 참가요청입니다"),
+    UNABLE_TO_PARTICIPATE_IN_POST(false, 2013, "게시글에 더이상 참여할 수 없습니다");
 
 
     private final boolean isSuccess;

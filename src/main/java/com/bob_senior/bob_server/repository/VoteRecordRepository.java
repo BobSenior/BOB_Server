@@ -14,9 +14,6 @@ public interface VoteRecordRepository extends JpaRepository<VoteRecord, VoteId> 
 
     List<VoteRecord> findAllByVoteId_VoteIdx(Integer voteIdx);
 
-    @Query(value = "select record.voteContent from VoteRecord record where record.voteId = :voteId and record.count = max ()")
-
-
-    VoteRecord findTop1ByCount();
+    VoteRecord findFirstByVoteId_VoteIdxOrderByCountDesc(Integer voteIdx);
 
 }

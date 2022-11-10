@@ -25,5 +25,8 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
     @Query(value = "update PostParticipant p set p.status = :status where p.id.postIdx =:postIdx and p.id.userIdx = :userIdx")
     void changePostParticipationStatus(@Param("status") String status, @Param("postIdx") Integer postIdx, @Param("userIdx") Integer userIdx);
 
+    boolean existsByIdAndAndStatus(PostUser id, String status);
+
+
 
 }

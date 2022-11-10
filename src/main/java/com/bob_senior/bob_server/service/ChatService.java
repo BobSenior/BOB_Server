@@ -2,6 +2,7 @@ package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.Chat.*;
 import com.bob_senior.bob_server.domain.base.BaseException;
+import com.bob_senior.bob_server.repository.ChatMessageRepository;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
 import com.bob_senior.bob_server.repository.ChatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,13 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     @Autowired
-    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository){
+    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository){
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRepository = chatRepository;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     //채팅 페이지 가져오기
@@ -65,6 +68,7 @@ public class ChatService {
 
     //해당 유저의 lastRead기준으로 읽지 않은 개수 가져오기
     public Long getNumberOfUnreadChatByUserIdx(Integer userIdx,Integer roomIdx){
+
         Timestamp ts = chatParticipantRepository.getLastReadByUserIdx(userIdx);
         if(ts == null){
             //null일시 새로 데이터를 세팅해주고 0개 return
@@ -72,6 +76,19 @@ public class ChatService {
         }
         LocalDateTime lastRead = ts.toLocalDateTime();
         return chatRepository.countBySentAtAfter(lastRead);
+    }
+
+    //모든 채팅의 읽지 않은 개수를 가져오기
+    public Long getTotalNumberOfUnreadChatByUserIdx(Integer userIdx){
+        //1. chatParticipant에서 Q상태인 tuple의 timeStamp를 모두 가져오기
+        List<ChatParticipant> participants = chatParticipantRepository.getTotalUnreadChatNumber(userIdx);
+        //각각의 chatParticipant의 timeStamp와 chatIdx로 안읽은 채팅 개수 가져오기
+        Long total = 0L;
+        for (ChatParticipant participant : participants) {
+            int chatRoomIdx = participant.getId().getChatRoomIdx();
+            total += chatMessageRepository.countChatMessagesByChatRoomIdxAndAndSentAtAfter(chatRoomIdx,participant.getLastRead());
+        }
+        return total;
     }
 
     //해당 유저를 해당 채팅방에 참여시키기
