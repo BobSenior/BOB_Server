@@ -2,6 +2,7 @@ package com.bob_senior.bob_server.domain.Post;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity(name = "Post")
+@DynamicInsert
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

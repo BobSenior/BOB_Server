@@ -171,7 +171,7 @@ public class AppointmentController {
 
 
 
-    //초대기능
+    //초대기능 -> 무조건 방장만 할 수 있게
     @PostMapping("/appointment/{postIdx}/invite")
     public BaseResponse inviteUserIntoPostByUUID(@PathVariable Integer postIdx, @RequestBody UserInviteDTO inviteDTO){
         if(!(userService.checkUserExist(inviteDTO.getInviterIdx()))){

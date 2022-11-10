@@ -86,9 +86,7 @@ public class VoteController {
 
 
 
-    //투표의 생성은 websocket? 일반 url?
-    /*@MessageMapping("/vote/init/{roomIdx}")
-    @SendTo("/topic/room/{roomId}")*/
+    //투표 생성 api
     @PostMapping("/vote/init/{roomIdx}")
     public BaseResponse makeNewVoteToRoom(@PathVariable Integer roomIdx, MakeVoteDTO makeVoteDTO){
         if(!userService.checkUserExist(makeVoteDTO.getMakerIdx())){
@@ -117,8 +115,10 @@ public class VoteController {
         }
     }
 
-    /*@MessageMapping("/vote/{roomId}")
-    @SendTo("/topic/room/{roomId}")*/
+
+
+
+    //투표 api
     @PostMapping("/vote/{roomId}")
     public BaseResponse makeVote(@PathVariable int roomId, UserVoteDTO userVoteDTO){
         //1. 해당 유저가 적절한지 먼저 검사
@@ -145,8 +145,10 @@ public class VoteController {
         }
     }
 
-    /*@MessageMapping("/vote/terminate/{roomId}")
-    @SendTo("/topic/room/{roomId}")*/
+
+
+
+    //투표 종료 api
     @PostMapping("/vote/terminate/{roomId}")
     public BaseResponse terminateVote(@PathVariable int roomId,TerminateVoteDTO terminateVoteDTO){
         //Q)terminate이후 바로 투표내용을 적용할것인가?

@@ -43,6 +43,9 @@ public class ChatController {
         this.sessionRecordRepository = sessionRecordRepository;
     }
 
+
+
+
     //채팅방에 참여
     @MessageMapping("/stomp/init/{roomId}")
     @SendTo("/topic/room/{roomId}")
@@ -61,6 +64,9 @@ public class ChatController {
         msg.setData(nickname + " 님이 입장하셨습니다!");
         return new BaseResponse<ChatDto>(msg);
     }
+
+
+
 
     //채팅보내기
     @MessageMapping("/stomp/{roomId}")
@@ -84,6 +90,9 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+
+
+
     //채팅방 나가기
     @MessageMapping("/stomp/exit/{roomId}")
     @SendTo("/topic/room/{roomId}")
@@ -104,6 +113,10 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+
+
+
+    //첫 연결시 거치는 api
     @MessageMapping("/stomp/record/{roomId}")
     public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable int roomId, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
@@ -112,7 +125,7 @@ public class ChatController {
         return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
-    //1. 채팅을 페이지 단위로 받아오기
+    // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
     public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable int roomId, final Pageable pageable){
         //pageable = requestParam으로 받음
@@ -148,6 +161,7 @@ public class ChatController {
             return new BaseResponse(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
+        //return new BaseResponse(chatService.getTotalNumberOfUnreadChatByUserIdx(userIdx));
     }
 
     //test method
