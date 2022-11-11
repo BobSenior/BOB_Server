@@ -17,7 +17,7 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
 
     boolean existsChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(Integer chatRoomIdx, Integer chatParticipantIdx);
 
-    ChatParticipant getChatParticipantById_ChatParticipantIdxAndAndId_ChatRoomIdx(Integer chatRoomIdx,Integer chatParticipantIdx);
+    ChatParticipant getChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(Integer chatRoomIdx,Integer chatParticipantIdx);
 
     @Query(value = "select cp.lastRead from ChatParticipant cp where cp.id.chatParticipantIdx = :participant")
     Timestamp getLastReadByUserIdx(@Param("participant") Integer participantIdx);

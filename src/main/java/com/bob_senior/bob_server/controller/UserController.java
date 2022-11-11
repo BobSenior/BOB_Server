@@ -40,6 +40,17 @@ public class UserController {
         }
     }
 
+
+
+
+
+
+    /**
+     *
+     * FriendShip
+     *
+     **/
+
     //해당 유저에게 친구추가 요청
     @PostMapping("/user/friendship/request")
     public BaseResponse makeFriendshipRequestByUserIdx(@RequestBody RequestFriendshipDTO requestFriendshipDTO){
@@ -53,6 +64,9 @@ public class UserController {
             return new BaseResponse(e.getStatus());
         }
     }
+
+
+
 
     //자신에게 온 친구추가목록 확인
     @GetMapping("/user/friendship/check")
@@ -68,6 +82,9 @@ public class UserController {
         }
     }
 
+
+
+
     //친구 요청 처리 -> boolean으로 결정
     @PostMapping("/user/friendship/determine")
     public BaseResponse determineFriendshipRequest(@RequestBody DetermineFriendshipDTO determineFriendshipDTO){
@@ -81,7 +98,4 @@ public class UserController {
             return new BaseResponse(e.getStatus());
         }
     }
-
-
-
 }

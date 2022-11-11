@@ -60,7 +60,7 @@ public class ChatService {
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_ChatParticipantIdxAndAndId_ChatRoomIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(chatIdx,userIdx);
         if(cp.getStatus().equals("Q")) return false;
         return true;
 
@@ -86,7 +86,7 @@ public class ChatService {
         Long total = 0L;
         for (ChatParticipant participant : participants) {
             int chatRoomIdx = participant.getId().getChatRoomIdx();
-            total += chatMessageRepository.countChatMessagesByChatRoomIdxAndAndSentAtAfter(chatRoomIdx,participant.getLastRead());
+            total += chatMessageRepository.countChatMessagesByChatRoomIdxAndSentAtAfter(chatRoomIdx,participant.getLastRead());
         }
         return total;
     }

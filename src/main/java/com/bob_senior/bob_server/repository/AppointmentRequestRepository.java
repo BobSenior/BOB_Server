@@ -8,6 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AppointmentRequestRepository extends JpaRepository<AppointmentRequest, PostUser> {
 
-    Page<AppointmentRequest> findAllByPostAndUser_UserIdxAndStatus(Integer userIdx, String status, Pageable pageable);
-
+    Page<AppointmentRequest> findAllByPostUser_UserIdxAndStatus(Integer userIdx, String status, Pageable pageable);
 }

@@ -66,7 +66,7 @@ public class VoteService {
                             .voteIdx(vote.getVoteIdx())
                             .participatedNum(vote.getParticipatedNum())
                             .participated(
-                                    voteParticipatedRepository.existsVoteParticipatedByUserIdxAndAndVoteIdx(userIdx,vote.getVoteIdx())
+                                    voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVoteIdx(userIdx,vote.getVoteIdx())
                             )
                             .build()
             );
@@ -96,7 +96,7 @@ public class VoteService {
     public ShownVoteDTO applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
         Vote vote = voteRepository.findVoteByVoteIdx(userVoteDTO.getVoteIdx());
         // 해당 유저가 이미 vote 했는지 확인
-        boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndAndVoteIdx(
+        boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVoteIdx(
                 userVoteDTO.getUserIdx(), userVoteDTO.getVoteIdx()
         );
         if(already_participated){

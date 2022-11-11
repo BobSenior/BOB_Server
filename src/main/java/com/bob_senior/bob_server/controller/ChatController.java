@@ -125,6 +125,9 @@ public class ChatController {
         return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
+
+
+
     // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
     public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable int roomId, final Pageable pageable){
@@ -146,6 +149,9 @@ public class ChatController {
         return new BaseResponse<>(chats);
     }
 
+
+
+
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
     //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
@@ -163,6 +169,9 @@ public class ChatController {
         return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
         //return new BaseResponse(chatService.getTotalNumberOfUnreadChatByUserIdx(userIdx));
     }
+
+
+
 
     //test method
     @GetMapping("test")

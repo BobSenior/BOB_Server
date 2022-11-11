@@ -87,7 +87,7 @@ public class AppointmentService {
 
     public List<AppointmentHeadDTO> getUserWaitingAppointment(Integer userIdx, Pageable pageable) throws BaseException{
         //해당 유저의 waiting상태의 request을 전부 가져오기
-        List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostAndUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
+        List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
 
         List<AppointmentHeadDTO> data = new ArrayList<>();
 
