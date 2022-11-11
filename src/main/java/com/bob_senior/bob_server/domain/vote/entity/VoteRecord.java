@@ -1,5 +1,6 @@
-package com.bob_senior.bob_server.domain.vote;
+package com.bob_senior.bob_server.domain.vote.entity;
 
+import com.bob_senior.bob_server.domain.vote.entity.VoteId;
 import lombok.*;
 
 import javax.persistence.*;

@@ -1,5 +1,6 @@
-package com.bob_senior.bob_server.domain.Chat;
+package com.bob_senior.bob_server.domain.Chat.entity;
 
+import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
 import lombok.*;
 
 import javax.persistence.*;

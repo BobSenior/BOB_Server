@@ -1,8 +1,7 @@
 package com.bob_senior.bob_server.repository;
 
-import com.bob_senior.bob_server.domain.Chat.ChatParticipant;
-import com.bob_senior.bob_server.domain.Chat.ChatNUser;
-import com.fasterxml.jackson.databind.ser.std.TimeZoneSerializer;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatParticipant;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
 package com.bob_senior.bob_server.repository;
 
-import com.bob_senior.bob_server.domain.Post.PostUser;
-import com.bob_senior.bob_server.domain.appointment.AppointmentRequest;
+import com.bob_senior.bob_server.domain.Post.entity.PostUser;
+import com.bob_senior.bob_server.domain.appointment.entity.AppointmentRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

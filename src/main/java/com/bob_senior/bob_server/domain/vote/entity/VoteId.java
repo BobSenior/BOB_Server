@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.vote;
+package com.bob_senior.bob_server.domain.vote.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

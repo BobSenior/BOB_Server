@@ -1,18 +1,17 @@
 package com.bob_senior.bob_server.service;
 
-import com.bob_senior.bob_server.domain.Chat.ChatNUser;
-import com.bob_senior.bob_server.domain.Chat.ChatParticipant;
-import com.bob_senior.bob_server.domain.Post.Post;
-import com.bob_senior.bob_server.domain.Post.PostUser;
-import com.bob_senior.bob_server.domain.Post.PostParticipant;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatParticipant;
+import com.bob_senior.bob_server.domain.Post.entity.Post;
+import com.bob_senior.bob_server.domain.Post.entity.PostUser;
+import com.bob_senior.bob_server.domain.Post.entity.PostParticipant;
 import com.bob_senior.bob_server.domain.appointment.AppointmentHeadDTO;
-import com.bob_senior.bob_server.domain.appointment.AppointmentRequest;
+import com.bob_senior.bob_server.domain.appointment.entity.AppointmentRequest;
 import com.bob_senior.bob_server.domain.appointment.AppointmentViewDTO;
-import com.bob_senior.bob_server.domain.appointment.RequestHeadDTO;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.user.SimplifiedUserProfileDTO;
-import com.bob_senior.bob_server.domain.user.User;
+import com.bob_senior.bob_server.domain.user.entity.User;
 import com.bob_senior.bob_server.domain.user.UserProfile;
 import com.bob_senior.bob_server.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;

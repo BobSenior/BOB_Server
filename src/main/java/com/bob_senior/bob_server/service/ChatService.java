@@ -1,6 +1,9 @@
 package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.Chat.*;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatMessage;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatParticipant;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.repository.ChatMessageRepository;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;

@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.user;
+package com.bob_senior.bob_server.domain.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import lombok.Getter;

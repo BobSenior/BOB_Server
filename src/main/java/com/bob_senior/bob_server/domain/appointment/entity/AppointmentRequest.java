@@ -1,6 +1,6 @@
-package com.bob_senior.bob_server.domain.appointment;
+package com.bob_senior.bob_server.domain.appointment.entity;
 
-import com.bob_senior.bob_server.domain.Post.PostUser;
+import com.bob_senior.bob_server.domain.Post.entity.PostUser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

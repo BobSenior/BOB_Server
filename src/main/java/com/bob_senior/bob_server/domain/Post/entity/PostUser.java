@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.Post;
+package com.bob_senior.bob_server.domain.Post.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

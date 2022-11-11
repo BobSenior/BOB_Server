@@ -3,7 +3,7 @@ package com.bob_senior.bob_server.controller;
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
 import com.bob_senior.bob_server.domain.Chat.ChatPage;
 import com.bob_senior.bob_server.domain.Chat.SessionAndClientRecord;
-import com.bob_senior.bob_server.domain.Chat.SessionRecord;
+import com.bob_senior.bob_server.domain.Chat.entity.SessionRecord;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.repository.SessionRecordRepository;

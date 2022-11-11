@@ -1,9 +1,9 @@
-package com.bob_senior.bob_server.domain.user;
+package com.bob_senior.bob_server.domain.user.entity;
 
+import com.bob_senior.bob_server.domain.user.entity.FriendId;
 import lombok.*;
 
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 

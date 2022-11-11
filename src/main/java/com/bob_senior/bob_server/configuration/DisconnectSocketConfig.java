@@ -1,6 +1,6 @@
 package com.bob_senior.bob_server.configuration;
 
-import com.bob_senior.bob_server.domain.Chat.SessionRecord;
+import com.bob_senior.bob_server.domain.Chat.entity.SessionRecord;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
 import com.bob_senior.bob_server.repository.SessionRecordRepository;
 import lombok.extern.slf4j.Slf4j;

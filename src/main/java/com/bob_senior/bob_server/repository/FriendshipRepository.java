@@ -1,7 +1,7 @@
 package com.bob_senior.bob_server.repository;
 
-import com.bob_senior.bob_server.domain.user.FriendId;
-import com.bob_senior.bob_server.domain.user.Friendship;
+import com.bob_senior.bob_server.domain.user.entity.FriendId;
+import com.bob_senior.bob_server.domain.user.entity.Friendship;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
