@@ -24,5 +24,9 @@ public class ChatParticipant {
     private Timestamp lastRead;
 
 
+    @ManyToOne
+    @JoinColumn(name = "chatRoomIdx")
+    private ChatRoom chatRoom;
+
 
 }

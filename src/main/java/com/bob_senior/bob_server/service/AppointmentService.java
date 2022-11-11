@@ -29,14 +29,16 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final AppointmentRequestRepository appointmentRequestRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final PostPhotoRepository postPhotoRepository;
 
     @Autowired
-    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, AppointmentRequestRepository appointmentRequestRepository, ChatParticipantRepository chatParticipantRepository) {
+    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, AppointmentRequestRepository appointmentRequestRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository) {
         this.postRepository = postRepository;
         this.postParticipantRepository = postParticipantRepository;
         this.userRepository = userRepository;
         this.appointmentRequestRepository = appointmentRequestRepository;
         this.chatParticipantRepository = chatParticipantRepository;
+        this.postPhotoRepository = postPhotoRepository;
     }
 
 
@@ -93,6 +95,10 @@ public class AppointmentService {
         for (AppointmentRequest waiting : appointmentList) {
             Post post = postRepository.findPostByPostIdx(waiting.getPostUser().getPostIdx());
 
+            long currNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+
+            long waitingNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
 
             SimplifiedUserProfileDTO writer_simp = SimplifiedUserProfileDTO.builder()
@@ -100,17 +106,24 @@ public class AppointmentService {
                     .department(writer.getDepartment())
                             .schoolId(writer.getSchoolId())
                                     .school(writer.getSchool())
+                                    .school(writer.getSchool())
                                             .build();
 
             data.add(
                     AppointmentHeadDTO.builder()
                             .title(post.getTitle())
-                            .imageUrl(post.getImageURL())
+                            .writtenAt(post.getRegisteredAt())
+                            .imageURL(
+                                    postPhotoRepository.findPostPhotoById_PostIdx(post.getPostIdx()).getId().getPostPhotoUrl()
+                            )
                             .writer(writer_simp)
                             .location(post.getPlace())
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
+                            .totalNum(post.getParticipantLimit())
+                            .currNum(currNum)
+                            .waitingNum(waitingNum)
                             .build()
             );
         }
@@ -122,12 +135,16 @@ public class AppointmentService {
 
     public List<AppointmentHeadDTO> getUserParticipatedAppointment(Integer userIdx, Pageable pageable) throws BaseException{
 
-        List<ChatParticipant> list_participated = chatParticipantRepository.findAllById_ChatParticipantIdx(userIdx,pageable).getContent();
+        List<PostParticipant> list_participating = postParticipantRepository.findAllById_UserIdxAndStatus(userIdx,"PARTICIPATE",pageable).getContent();
 
         List<AppointmentHeadDTO> data = new ArrayList<>();
 
-        for (ChatParticipant participant : list_participated) {
-            Post post = postRepository.findPostByPostIdx(participant.getId().getChatRoomIdx());
+        for (PostParticipant participant : list_participating) {
+            Post post = postRepository.findPostByPostIdx(participant.getId().getPostIdx());
+
+            long currNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+
+            long waitingNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"WAITING");
 
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
 
@@ -141,12 +158,18 @@ public class AppointmentService {
             data.add(
                     AppointmentHeadDTO.builder()
                             .title(post.getTitle())
-                            .imageUrl(post.getImageURL())
+                            .writtenAt(post.getRegisteredAt())
+                            .imageURL(
+                                    postPhotoRepository.findPostPhotoById_PostIdx(post.getPostIdx()).getId().getPostPhotoUrl()
+                            )
                             .writer(writer_simp)
                             .location(post.getPlace())
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
+                            .totalNum(post.getParticipantLimit())
+                            .currNum(currNum)
+                            .waitingNum(waitingNum)
                             .build()
             );
         }
@@ -258,11 +281,18 @@ public class AppointmentService {
         List<Post> posts = postRepository.getAllThatCanParticipant(user.getDepartment()).getContent();
         List<AppointmentHeadDTO> data = new ArrayList<>();
         for (Post post : posts) {
+
+            long currNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+
+            long waitingNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
             data.add(
                     AppointmentHeadDTO.builder()
                             .title(post.getTitle())
-                            .imageUrl(post.getImageURL())
+                            .imageURL(
+                                    postPhotoRepository.findPostPhotoById_PostIdx(post.getPostIdx()).getId().getPostPhotoUrl()
+                            )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
                                             .nickname(writer.getNickName())
@@ -275,6 +305,9 @@ public class AppointmentService {
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
+                            .totalNum(post.getParticipantLimit())
+                            .currNum(currNum)
+                            .waitingNum(waitingNum)
                             .build()
             );
         }
@@ -327,5 +360,46 @@ public class AppointmentService {
             post.setRecruitmentStatus("finish");
             postRepository.save(post);
         }
+    }
+
+
+
+    //해당 string으로 검색하기 -> 타이틀 검색?
+    public List<AppointmentHeadDTO> searchByStringInTitle(Integer userIdx,String searchString, Pageable pageable) throws BaseException {
+        List<AppointmentHeadDTO> heads = new ArrayList<>();
+        String dep = userRepository.findUserByUserIdx(userIdx).getDepartment();
+        List<Post> list = postRepository.searchAllParticipantThatCanParticipant(dep,searchString,pageable).getContent();
+        for (Post post : list) {
+            long currNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+
+            long waitingNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+
+            User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
+            heads.add(
+                    AppointmentHeadDTO.builder()
+                            .title(post.getTitle())
+                            .writtenAt(post.getRegisteredAt())
+                            .imageURL(
+                                    postPhotoRepository.findPostPhotoById_PostIdx(post.getPostIdx()).getId().getPostPhotoUrl()
+                            )
+                            .writer(
+                                    SimplifiedUserProfileDTO.builder()
+                                            .nickname(writer.getNickName())
+                                            .department(writer.getDepartment())
+                                            .schoolId(writer.getSchoolId())
+                                            .school(writer.getSchool())
+                                            .build()
+                            )
+                            .location(post.getPlace())
+                            .meetingAt(post.getMeetingDate())
+                            .type(post.getMeetingType())
+                            .status(post.getRecruitmentStatus())
+                            .totalNum(post.getParticipantLimit())
+                            .currNum(currNum)
+                            .waitingNum(waitingNum)
+                            .build()
+            );
+        }
+        return heads;
     }
 }

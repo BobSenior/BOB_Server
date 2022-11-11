@@ -2,9 +2,7 @@ package com.bob_senior.bob_server.domain.Post.entity;
 
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import javax.persistence.*;
 
 @Getter
 @Setter
@@ -18,4 +16,12 @@ public class PostParticipant {
 
     @Column(name="status")
     private String status;
+
+    /**
+     * 연관관계
+     */
+
+    @ManyToOne
+    @JoinColumn(name = "postIdx")
+    private Post post;
 }

@@ -23,4 +23,5 @@ public class VoteId implements Serializable {
     @Column(name = "choice")
     //몇번째 선택지인지
     private Integer choiceIdx;
+
 }

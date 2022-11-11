@@ -27,6 +27,8 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
 
     boolean existsByIdAndAndStatus(PostUser id, String status);
 
+    Page<PostParticipant> findAllById_UserIdxAndStatus(Integer userIdx, String Status, Pageable pageable);
+
 
 
 }

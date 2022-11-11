@@ -144,6 +144,7 @@ public class AppointmentController {
 
 
 
+
     //해당 참가 요청 거절 or 수락 -> 이건 그냥 boolean 값을 받으면 될듯
     @PostMapping("/appointment/determine/{postIdx}")
     public BaseResponse setUserRequestToAcceptOrReject(@PathVariable Integer postIdx, @RequestBody HandleRequestDTO handleRequestDTO){
@@ -171,8 +172,9 @@ public class AppointmentController {
 
 
 
+
     //초대기능 -> 무조건 방장만 할 수 있게
-    @PostMapping("/appointment/{postIdx}/invite")
+    @PostMapping("/appointment/invite/{postIdx}")
     public BaseResponse inviteUserIntoPostByUUID(@PathVariable Integer postIdx, @RequestBody UserInviteDTO inviteDTO){
         if(!(userService.checkUserExist(inviteDTO.getInviterIdx()))){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
@@ -193,5 +195,35 @@ public class AppointmentController {
         }
     }
 
+
+
+
+
+    //주어진 검색어로 title기반 search
+    @GetMapping("/appointment/search")
+    public BaseResponse getPostSearchResult(@RequestParam Integer userIdx, @RequestParam String searchString,Pageable pageable){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+            List<AppointmentHeadDTO> heads = appointmentService.searchByStringInTitle(userIdx,searchString,pageable);
+            return new BaseResponse(heads);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+    /*//tag를 통한 search
+    @GetMapping("/appointment/search/tags")
+    public BaseResponse getPostSearchResultByTags(@RequestParam Integer userIdx,@RequestParam String tag,Pageable pageable ){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }*/
 
 }

@@ -32,5 +32,9 @@ public class ChatMessage {
     @Column
     private String uuId;
 
+    @ManyToOne
+    @JoinColumn(name = "chatRoomIdx")
+    private ChatRoom chatRoom;
+
 
 }

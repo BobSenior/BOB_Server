@@ -1,14 +1,18 @@
 package com.bob_senior.bob_server.domain.Post.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import lombok.Getter;
+
+import javax.persistence.*;
 
 @Entity
+@Getter
 public class PostPhoto {
-    @Id
-    private Integer postIdx;
 
-    @Column(name = "postPhotoUrl")
-    private String postPhotoUrl;
+    @EmbeddedId
+    private PhotoId id;
+
+    @ManyToOne
+    @JoinColumn(name = "postIdx")
+    private Post post;
+
 }

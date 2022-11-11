@@ -46,9 +46,7 @@ public class UserController {
 
 
     /**
-     *
      * FriendShip
-     *
      **/
 
     //해당 유저에게 친구추가 요청

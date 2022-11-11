@@ -1,14 +1,13 @@
 package com.bob_senior.bob_server.domain.appointment.entity;
 
+import com.bob_senior.bob_server.domain.Post.entity.Post;
 import com.bob_senior.bob_server.domain.Post.entity.PostUser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import javax.persistence.*;
 
 @Entity
 @Getter
@@ -22,5 +21,9 @@ public class AppointmentRequest {
 
     @Column(name = "status")
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "postIdx")
+    private Post post;
 
 }

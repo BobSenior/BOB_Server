@@ -42,9 +42,6 @@ public class Post {
     private LocalDateTime meetingDate;
 
     @Column
-    private String imageURL;
-
-    @Column
     private String meetingType;
 
     @Column
@@ -52,4 +49,5 @@ public class Post {
 
     @Column
     private String participantConstraint;
+
 }
