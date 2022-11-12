@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface VoteRecordRepository extends JpaRepository<VoteRecord, VoteId> {
+public interface VoteRecordRepository extends JpaRepository<VoteRecord, Integer> {
 
     VoteRecord findVoteRecordByVoteId(VoteId id);
 

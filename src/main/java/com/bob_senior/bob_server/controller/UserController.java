@@ -5,6 +5,7 @@ import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.user.DetermineFriendshipDTO;
 import com.bob_senior.bob_server.domain.user.RequestFriendshipDTO;
+import com.bob_senior.bob_server.domain.user.RequireBlockDTO;
 import com.bob_senior.bob_server.domain.user.SimplifiedUserProfileDTO;
 import com.bob_senior.bob_server.service.AppointmentService;
 import com.bob_senior.bob_server.service.UserService;
@@ -96,4 +97,20 @@ public class UserController {
             return new BaseResponse(e.getStatus());
         }
     }
+
+    @PostMapping("/user/block")
+    public BaseResponse makeBlockUser(@RequestBody RequireBlockDTO requireBlockDTO){
+        if(!userService.checkUserExist(requireBlockDTO.getMyIdx())){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+            userService.makeBlock(requireBlockDTO.getMyIdx(),requireBlockDTO.getBlockUserIdx());
+            return new BaseResponse(BaseResponseStatus.SUCCESS);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+
+
 }

@@ -15,9 +15,9 @@ public class PostTag {
     private Integer postTagIdx;
 
     @Embedded
-    private TagId id;
+    private TagId tag;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "postIdx")
     private Post post;
 }

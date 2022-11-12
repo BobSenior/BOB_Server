@@ -13,21 +13,21 @@ import java.util.List;
 
 public interface PostParticipantRepository extends JpaRepository<PostParticipant, Integer> {
 
-    List<PostParticipant> findPostParticipantsById_PostIdxAndStatus(Integer postIdx, String status);
+    List<PostParticipant> findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(Integer postIdx, String status,String position);
 
-    boolean existsById(PostUser id);
+    boolean existsByPostUser(PostUser id);
 
-    Long countById_PostIdxAndStatus(int postIdx, String status);
+    Long countByPostUser_PostIdxAndStatus(int postIdx, String status);
 
-    Page<PostParticipant> findAllById_PostIdxAndStatus(Integer postIdx, String Status, Pageable pageable);
+    Page<PostParticipant> findAllByPostUser_PostIdxAndStatus(Integer postIdx, String Status, Pageable pageable);
 
     @Modifying
-    @Query(value = "update PostParticipant p set p.status = :status where p.id.postIdx =:postIdx and p.id.userIdx = :userIdx")
+    @Query(value = "update PostParticipant p set p.status = :status where p.postUser.postIdx =:postIdx and p.postUser.userIdx = :userIdx")
     void changePostParticipationStatus(@Param("status") String status, @Param("postIdx") Integer postIdx, @Param("userIdx") Integer userIdx);
 
-    boolean existsByIdAndAndStatus(PostUser id, String status);
+    boolean existsByPostUserAndAndStatus(PostUser id, String status);
 
-    Page<PostParticipant> findAllById_UserIdxAndStatus(Integer userIdx, String Status, Pageable pageable);
+    Page<PostParticipant> findAllByPostUser_UserIdxAndStatus(Integer userIdx, String Status, Pageable pageable);
 
 
 }

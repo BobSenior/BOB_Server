@@ -11,13 +11,17 @@ import org.springframework.data.repository.query.Param;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, Integer> {
 
-    boolean existsByIdAndAndStatus(FriendId id, String status);
+    boolean existsByFriendInfoAndAndStatus(FriendId id, String status);
 
-    @Query(value = "select F from Friendship F where F.status = 'WAITING' and (F.id.maxUserIdx = :userIdx or F.id.minUserIdx = :userIdx) ")
+    boolean existsByFriendInfo(FriendId id);
+
+    Friendship getTopByFriendInfoAndStatus(FriendId id, String status);
+
+    @Query(value = "select F from Friendship F where F.status = 'WAITING' and (F.friendInfo.maxUserIdx = :userIdx or F.friendInfo.minUserIdx = :userIdx) ")
     Page<Friendship> findAllByUserIdxInWaiting(@Param("userIdx") Integer userIdx, Pageable pageable);
 
     @Modifying
-    @Query(value = "update Friendship f set f.status = 'ACTIVE' where f.id = :id")
+    @Query(value = "update Friendship f set f.status = 'ACTIVE' where f.friendInfo = :id")
     void updateFriendShipACTIVE(FriendId id);
 
 

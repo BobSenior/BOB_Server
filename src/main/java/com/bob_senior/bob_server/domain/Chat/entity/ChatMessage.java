@@ -32,7 +32,7 @@ public class ChatMessage {
     @Column
     private String uuId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chatRoomIdx")
     private ChatRoom chatRoom;
 

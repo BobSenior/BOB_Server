@@ -1,5 +1,6 @@
 package com.bob_senior.bob_server.controller;
 
+import com.bob_senior.bob_server.domain.Post.entity.PostViewDTO;
 import com.bob_senior.bob_server.domain.appointment.AppointmentHeadDTO;
 import com.bob_senior.bob_server.domain.appointment.AppointmentParticipantReqDTO;
 import com.bob_senior.bob_server.domain.appointment.HandleRequestDTO;
@@ -53,7 +54,7 @@ public class AppointmentController {
 
     //해당 약속 홈화면 정보 가져오기
     @GetMapping("/appointment/{roomIdx}")
-    public BaseResponse getAppointmentHomeView(@PathVariable Integer roomIdx, Integer userIdx){
+    public BaseResponse getAppointmentHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -62,6 +63,23 @@ public class AppointmentController {
         }
         try{
             return new BaseResponse(appointmentService.getAppointmentData(roomIdx));
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+    //post의 홈화면 가져오기
+    @GetMapping("/post/{roomIdx}")
+    public BaseResponse getPostHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx ){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        if(!appointmentService.isPostExist(roomIdx)){
+            return new BaseResponse(BaseResponseStatus.NON_EXIST_POSTIDX);
+        }
+        try{
+            PostViewDTO data = appointmentService.getPostData(roomIdx,userIdx);
+            return new BaseResponse(data);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }
@@ -213,17 +231,18 @@ public class AppointmentController {
         }
     }
 
-    /*//tag를 통한 search
+    //tag를 통한 search -> multi-tag?
     @GetMapping("/appointment/search/tags")
     public BaseResponse getPostSearchResultByTags(@RequestParam Integer userIdx,@RequestParam String tag,Pageable pageable ){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
         try{
-
+            List<AppointmentHeadDTO> heads = appointmentService.searchByTag(userIdx,tag,pageable);
+            return new BaseResponse(heads);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }
-    }*/
+    }
 
 }

@@ -14,25 +14,25 @@ import java.util.List;
 
 public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Integer> {
 
-    boolean existsChatParticipantById_UserIdxAndId_ChatRoomIdx(Integer chatRoomIdx, Integer chatParticipantIdx);
+    boolean existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Integer chatRoomIdx, Integer chatParticipantIdx);
 
-    ChatParticipant getChatParticipantById_UserIdxAndId_ChatRoomIdx(Integer chatRoomIdx,Integer chatParticipantIdx);
+    ChatParticipant getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Integer chatRoomIdx,Integer chatParticipantIdx);
 
-    @Query(value = "select cp.lastRead from ChatParticipant cp where cp.id.userIdx = :participant")
+    @Query(value = "select cp.lastRead from ChatParticipant cp where cp.chatNUser.userIdx = :participant")
     Timestamp getLastReadByUserIdx(@Param("participant") Integer participantIdx);
 
-    ChatParticipant findChatParticipantById(ChatNUser rau);
+    ChatParticipant findChatParticipantByChatNUser(ChatNUser rau);
 
-    Long countChatParticipantById_ChatRoomIdx(Integer chatRoomIdx);
+    Long countChatParticipantByChatNUser_ChatRoomIdx(Integer chatRoomIdx);
 
     @Modifying
-    @Query(value = "update ChatParticipant cp set cp.lastRead = :timestamp, cp.status = 'Q' where cp.id.chatRoomIdx = :roomIdx and cp.id.chatParticipantIdx = :userIdx")
+    @Query(value = "update ChatParticipant cp set cp.lastRead = :timestamp, cp.status = 'Q' where cp.chatNUser.chatRoomIdx = :roomIdx and cp.chatNUser.userIdx = :userIdx")
     void updateTimeStamp(@Param("timestamp") Timestamp ts, @Param("roomIdx") Integer chatIdx, @Param("userIdx") Integer userIdx);
 
     @Modifying
-    @Query(value = "update ChatParticipant cp set cp.status = 'A' where cp.id.userIdx = :userIdx and cp.id.chatRoomIdx = :roomIdx")
+    @Query(value = "update ChatParticipant cp set cp.status = 'A' where cp.chatNUser.userIdx = :userIdx and cp.chatNUser.chatRoomIdx = :roomIdx")
     void activateParticipation(@Param("userIdx") Integer userIdx, @Param("roomIdx") Integer roomIdx);
 
-    @Query(value = "select cp from ChatParticipant cp where cp.status = 'Q' and cp.id.userIdx = :userIdx")
+    @Query(value = "select cp from ChatParticipant cp where cp.status = 'Q' and cp.chatNUser.userIdx = :userIdx")
     List<ChatParticipant> getTotalUnreadChatNumber(@Param("userIdx") Integer userIdx);
 }

@@ -3,10 +3,7 @@ package com.bob_senior.bob_server.service;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.user.*;
-import com.bob_senior.bob_server.domain.user.entity.BlockId;
-import com.bob_senior.bob_server.domain.user.entity.FriendId;
-import com.bob_senior.bob_server.domain.user.entity.Friendship;
-import com.bob_senior.bob_server.domain.user.entity.User;
+import com.bob_senior.bob_server.domain.user.entity.*;
 import com.bob_senior.bob_server.repository.BlockRepository;
 import com.bob_senior.bob_server.repository.FriendshipRepository;
 import com.bob_senior.bob_server.repository.UserRepository;
@@ -45,12 +42,12 @@ public class UserService {
     public void makeNewFriendshipRequest(Integer requesterIdx, String targetUUID) throws BaseException {
         User user = userRepository.findByUuid(targetUUID);
         //1. 이미 친구 추가 된 경우 확인
-        if(friendshipRepository.existsByIdAndAndStatus(new FriendId(requesterIdx,user.getUserIdx()),"ACTIVE")){
+        if(friendshipRepository.existsByFriendInfoAndAndStatus(new FriendId(requesterIdx,user.getUserIdx()),"ACTIVE")){
             throw new BaseException(BaseResponseStatus.ALREADY_HAS_FRIENDSHIP);
         }
 
         //2. 차단 여부 확인하기
-        boolean hasBlocked = blockRepository.existsById(new BlockId(user.getUserIdx(),requesterIdx));
+        boolean hasBlocked = blockRepository.existsByBlockInfo(new BlockId(user.getUserIdx(),requesterIdx));
         if(hasBlocked){
             throw new BaseException(BaseResponseStatus.CAN_NOT_REQUEST_FRIENDSHIP);
         }
@@ -58,7 +55,7 @@ public class UserService {
         //3. 이미 친구 요청이 보내졌는지 확인.. 할필요 없이 그냥 덮어버리기?
         friendshipRepository.save(
                 Friendship.builder()
-                        .id(new FriendId(requesterIdx,user.getUserIdx()))
+                        .friendInfo(new FriendId(requesterIdx,user.getUserIdx()))
                         .status("WAITING")
                         .build()
         );
@@ -69,7 +66,7 @@ public class UserService {
         List<Friendship> list = friendshipRepository.findAllByUserIdxInWaiting(userIdx,pageable).getContent();
         List<SimplifiedUserProfileDTO> data = new ArrayList<>();
         for (Friendship friendship : list) {
-            Integer other = friendship.getId().getMinUserIdx() == userIdx?friendship.getId().getMaxUserIdx() : friendship.getId().getMinUserIdx();
+            Integer other = friendship.getFriendInfo().getMinUserIdx() == userIdx?friendship.getFriendInfo().getMaxUserIdx() : friendship.getFriendInfo().getMinUserIdx();
             User user = userRepository.findUserByUserIdx(other);
             data.add(
                     SimplifiedUserProfileDTO.builder()
@@ -86,11 +83,11 @@ public class UserService {
     public void determineFriendRequest(Integer userIdx, Integer targetIdx, boolean accept) throws BaseException{
         //해당 유저의 request를 처리하기
         FriendId friendId = new FriendId(userIdx,targetIdx);
-        boolean already = friendshipRepository.existsByIdAndAndStatus(friendId,"ACTIVE");
+        boolean already = friendshipRepository.existsByFriendInfoAndAndStatus(friendId,"ACTIVE");
         if(already){
             throw new BaseException(BaseResponseStatus.ALREADY_HAS_FRIENDSHIP);
         }
-        if(!friendshipRepository.existsById(friendId)){
+        if(!friendshipRepository.existsByFriendInfo(friendId)){
             //애초에 요청이 없던 케이스
             throw new BaseException(BaseResponseStatus.INVALID_USER_TO_ACCEPT);
         }
@@ -100,7 +97,30 @@ public class UserService {
             friendshipRepository.updateFriendShipACTIVE(friendId);
         }
         else{
-            friendshipRepository.delete(new Friendship(friendId,"WAITING"));
+            Friendship friendship = friendshipRepository.getTopByFriendInfoAndStatus(friendId,"WAITING");
+            friendshipRepository.delete(friendship);
         }
+    }
+
+    public void makeBlock(Integer myIdx, Integer blockUserIdx) throws BaseException{
+        //block tuple을 생성
+        BlockId info = new BlockId(myIdx,blockUserIdx);
+        if(blockRepository.existsByBlockInfo(info)){
+            //이미 block에 존재
+            throw new BaseException(BaseResponseStatus.ALREADY_BLOCKED_USER);
+        }
+        //존재하지 않을경우 block을 저장
+        Block block = Block.builder().blockInfo(info).build();
+        blockRepository.save(block);
+
+        //이후 friendship에 해당 user존재시 tuple삭제
+        friendshipRepository.delete(
+                Friendship.builder()
+                        .friendInfo(
+                                new FriendId(myIdx,blockUserIdx)
+                        )
+                        .status("ACTIVATE")
+                        .build()
+        );
     }
 }

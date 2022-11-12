@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BlockRepository extends JpaRepository<Block,Integer> {
 
-    boolean existsById(BlockId id);
+    boolean existsByBlockInfo(BlockId id);
 
 }

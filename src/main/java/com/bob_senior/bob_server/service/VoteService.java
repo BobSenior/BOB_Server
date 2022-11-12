@@ -166,7 +166,7 @@ public class VoteService {
                 .createdAt(ldt)
                 .isActivated("ACTIVATE")
                 .participatedNum(0)
-                .maxNum(Math.toIntExact(chatParticipantRepository.countChatParticipantById_ChatRoomIdx(roomIdx)))
+                .maxNum(Math.toIntExact(chatParticipantRepository.countChatParticipantByChatNUser_ChatRoomIdx(roomIdx)))
                 .voteType("NORMAL").UUID(uuid)
                 .build());
         //voteIdx는 db에 의한 자동생성... 일단 생성한 뒤에 가져오는게 best->concurrency problem..?

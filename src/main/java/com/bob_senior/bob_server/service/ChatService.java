@@ -57,13 +57,13 @@ public class ChatService {
 
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Integer chatIdx, Integer userIdx){
-        boolean prev = chatParticipantRepository.existsChatParticipantById_UserIdxAndId_ChatRoomIdx(chatIdx,userIdx);
+        boolean prev = chatParticipantRepository.existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_UserIdxAndId_ChatRoomIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
         if(cp.getStatus().equals("Q")) return false;
         return true;
 
@@ -88,7 +88,7 @@ public class ChatService {
         //각각의 chatParticipant의 timeStamp와 chatIdx로 안읽은 채팅 개수 가져오기
         Long total = 0L;
         for (ChatParticipant participant : participants) {
-            int chatRoomIdx = participant.getId().getChatRoomIdx();
+            int chatRoomIdx = participant.getChatNUser().getChatRoomIdx();
             total += chatMessageRepository.countChatMessagesByChatRoomIdxAndSentAtAfter(chatRoomIdx,participant.getLastRead());
         }
         return total;
@@ -101,7 +101,7 @@ public class ChatService {
         Long datetime = System.currentTimeMillis();
         Timestamp timestamp = new Timestamp(datetime);
         ChatParticipant cp = ChatParticipant.builder()
-                .id(rau)
+                .chatNUser(rau)
                 .status("A")
                 .lastRead(timestamp)
                 .build();
@@ -125,7 +125,7 @@ public class ChatService {
     //user가 방 밖으로 나갈시 disable시키기
     public void deleteUserFromRoom(int roomId, Integer sender) {
         ChatNUser rau = new ChatNUser(roomId,sender);
-        ChatParticipant cp = chatParticipantRepository.findChatParticipantById(rau);
+        ChatParticipant cp = chatParticipantRepository.findChatParticipantByChatNUser(rau);
         cp.setStatus("Q");
         chatParticipantRepository.save(cp);
     }

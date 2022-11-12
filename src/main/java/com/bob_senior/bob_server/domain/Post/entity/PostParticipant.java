@@ -17,16 +17,19 @@ public class PostParticipant {
     private Integer postParticipantIdx;
 
     @Embedded
-    private PostUser id;
+    private PostUser postUser;
 
     @Column(name="status")
     private String status;
+
+    @Column
+    private String position;
 
     /**
      * 연관관계
      */
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "postIdx")
     private Post post;
 }

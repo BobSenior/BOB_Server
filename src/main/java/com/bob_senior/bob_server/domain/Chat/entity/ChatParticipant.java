@@ -19,7 +19,7 @@ public class ChatParticipant {
     private Integer chatParticipantIdx;
 
     @Embedded
-    private ChatNUser id;
+    private ChatNUser chatNUser;
 
     @Column(length = 45)
     private String status;
@@ -28,7 +28,7 @@ public class ChatParticipant {
     private Timestamp lastRead;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chatRoomIdx")
     private ChatRoom chatRoom;
 

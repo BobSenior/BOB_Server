@@ -19,7 +19,7 @@ public class Friendship {
 
 
     @Embedded
-    private FriendId id;
+    private FriendId friendInfo;
 
     @Column(name="status")
     private String status;

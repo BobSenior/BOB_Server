@@ -18,7 +18,7 @@ public class VoteParticipated {
     @Column
     private Integer userIdx;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voteIdx")
     private Vote vote;
 

@@ -13,9 +13,9 @@ public class PostPhoto {
     private Integer postPhotoIdx;
 
     @Embedded
-    private PhotoId id;
+    private PhotoId photoId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "postIdx")
     private Post post;
 

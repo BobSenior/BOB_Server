@@ -1,6 +1,7 @@
 package com.bob_senior.bob_server.domain.user.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -8,6 +9,7 @@ import javax.persistence.*;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Block {
 
     @Id
@@ -16,6 +18,6 @@ public class Block {
 
 
     @Embedded
-    private BlockId id;
+    private BlockId blockInfo;
 
 }
