@@ -9,9 +9,9 @@ import java.sql.Timestamp;
 @Entity
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ChatParticipant {
 
     @Id

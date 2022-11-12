@@ -26,16 +26,14 @@ public class AppointmentService {
     private final PostRepository postRepository;
     private final PostParticipantRepository postParticipantRepository;
     private final UserRepository userRepository;
-    private final AppointmentRequestRepository appointmentRequestRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final PostPhotoRepository postPhotoRepository;
 
     @Autowired
-    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, AppointmentRequestRepository appointmentRequestRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository) {
+    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository,ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository) {
         this.postRepository = postRepository;
         this.postParticipantRepository = postParticipantRepository;
         this.userRepository = userRepository;
-        this.appointmentRequestRepository = appointmentRequestRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.postPhotoRepository = postPhotoRepository;
     }
@@ -262,7 +260,13 @@ public class AppointmentService {
             //1. 일단 postParticipation을 participate로 변경
             postParticipantRepository.changePostParticipationStatus("PARTICIPATE",postIdx,requesterIdx);
             //2. 그 후 해당 post의 chatroom에 추가 ->
-            chatParticipantRepository.save(new ChatParticipant(new ChatNUser(postIdx,requesterIdx),"A",null));
+            chatParticipantRepository.save(
+                    ChatParticipant.builder()
+                            .id(new ChatNUser(postIdx,requesterIdx))
+                            .status("A")
+                            .lastRead(null)
+                            .build()
+            );
             changeRecruitmentStatusIfFull(post, total, curr);
         }
         else{
