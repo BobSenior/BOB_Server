@@ -14,7 +14,11 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class ChatParticipant {
 
-    @EmbeddedId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer chatParticipantIdx;
+
+    @Embedded
     private ChatNUser id;
 
     @Column(length = 45)

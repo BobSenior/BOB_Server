@@ -8,7 +8,11 @@ import javax.persistence.*;
 @Getter
 public class PostPhoto {
 
-    @EmbeddedId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer postPhotoIdx;
+
+    @Embedded
     private PhotoId id;
 
     @ManyToOne

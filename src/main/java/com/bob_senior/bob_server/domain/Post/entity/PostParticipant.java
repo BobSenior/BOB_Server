@@ -11,7 +11,12 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostParticipant {
-    @EmbeddedId
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer postParticipantIdx;
+
+    @Embedded
     private PostUser id;
 
     @Column(name="status")

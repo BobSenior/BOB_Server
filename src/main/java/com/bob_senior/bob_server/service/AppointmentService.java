@@ -6,7 +6,6 @@ import com.bob_senior.bob_server.domain.Post.entity.Post;
 import com.bob_senior.bob_server.domain.Post.entity.PostUser;
 import com.bob_senior.bob_server.domain.Post.entity.PostParticipant;
 import com.bob_senior.bob_server.domain.appointment.AppointmentHeadDTO;
-import com.bob_senior.bob_server.domain.appointment.entity.AppointmentRequest;
 import com.bob_senior.bob_server.domain.appointment.AppointmentViewDTO;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
@@ -88,12 +87,13 @@ public class AppointmentService {
 
     public List<AppointmentHeadDTO> getUserWaitingAppointment(Integer userIdx, Pageable pageable) throws BaseException{
         //해당 유저의 waiting상태의 request을 전부 가져오기
-        List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
+        //List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
+        List<PostParticipant> participantList = postParticipantRepository.findAllById_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
 
         List<AppointmentHeadDTO> data = new ArrayList<>();
 
-        for (AppointmentRequest waiting : appointmentList) {
-            Post post = postRepository.findPostByPostIdx(waiting.getPostUser().getPostIdx());
+        for (PostParticipant waiting : participantList) {
+            Post post = postRepository.findPostByPostIdx(waiting.getId().getPostIdx());
 
             long currNum = postParticipantRepository.countById_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
 

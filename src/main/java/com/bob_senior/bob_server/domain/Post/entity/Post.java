@@ -50,4 +50,6 @@ public class Post {
     @Column
     private String participantConstraint;
 
+    @Column
+    private Integer chatRoomIdx;
 }

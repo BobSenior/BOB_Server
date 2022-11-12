@@ -15,7 +15,7 @@ public class ChatNUser implements Serializable {
 
     @Column(name = "chatRoomIdx")
     private Integer chatRoomIdx;
-    @Column(name = "chatParticipantIdx")
-    private Integer chatParticipantIdx;
+    @Column(name = "userIdx")
+    private Integer userIdx;
 
 }

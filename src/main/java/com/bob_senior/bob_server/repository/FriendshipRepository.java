@@ -9,9 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface FriendshipRepository extends JpaRepository<Friendship, FriendId> {
-
-    Page<Friendship> findAllById_MaxUserIdxOrId_MinUserIdx(Integer userIdx1, Integer userIdx2, Pageable pageable);
+public interface FriendshipRepository extends JpaRepository<Friendship, Integer> {
 
     boolean existsByIdAndAndStatus(FriendId id, String status);
 

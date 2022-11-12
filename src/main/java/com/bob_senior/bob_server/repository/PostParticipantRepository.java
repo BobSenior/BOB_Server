@@ -11,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface PostParticipantRepository extends JpaRepository<PostParticipant, PostUser> {
+public interface PostParticipantRepository extends JpaRepository<PostParticipant, Integer> {
 
     List<PostParticipant> findPostParticipantsById_PostIdxAndStatus(Integer postIdx, String status);
 
@@ -28,7 +28,6 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
     boolean existsByIdAndAndStatus(PostUser id, String status);
 
     Page<PostParticipant> findAllById_UserIdxAndStatus(Integer userIdx, String Status, Pageable pageable);
-
 
 
 }

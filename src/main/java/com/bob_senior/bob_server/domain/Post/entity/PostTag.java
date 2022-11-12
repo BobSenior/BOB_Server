@@ -10,7 +10,11 @@ import javax.persistence.*;
 @Setter
 public class PostTag {
 
-    @EmbeddedId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer postTagIdx;
+
+    @Embedded
     private TagId id;
 
     @ManyToOne

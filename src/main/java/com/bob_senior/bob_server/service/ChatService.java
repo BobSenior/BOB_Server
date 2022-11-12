@@ -57,13 +57,13 @@ public class ChatService {
 
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Integer chatIdx, Integer userIdx){
-        boolean prev = chatParticipantRepository.existsChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(chatIdx,userIdx);
+        boolean prev = chatParticipantRepository.existsChatParticipantById_UserIdxAndId_ChatRoomIdx(chatIdx,userIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_UserIdxAndId_ChatRoomIdx(chatIdx,userIdx);
         if(cp.getStatus().equals("Q")) return false;
         return true;
 

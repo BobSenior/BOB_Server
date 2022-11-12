@@ -10,8 +10,12 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class Block {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer blockIdx;
 
-    @EmbeddedId
+
+    @Embedded
     private BlockId id;
 
 }

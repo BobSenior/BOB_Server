@@ -3,9 +3,7 @@ package com.bob_senior.bob_server.domain.user.entity;
 import com.bob_senior.bob_server.domain.user.entity.FriendId;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import javax.persistence.*;
 
 @Entity
 @Getter
@@ -15,7 +13,12 @@ import javax.persistence.Entity;
 @Builder
 public class Friendship {
 
-    @EmbeddedId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer friendshipIdx;
+
+
+    @Embedded
     private FriendId id;
 
     @Column(name="status")
