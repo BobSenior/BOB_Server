@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class MakeVoteDTO {
 
-    private Integer makerIdx;
+    private Long makerIdx;
 
     private String title;
 

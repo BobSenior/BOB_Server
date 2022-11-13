@@ -29,17 +29,17 @@ public class UserService {
         this.friendshipRepository = friendshipRepository;
     }
 
-    public boolean checkUserExist(Integer userIdx){
+    public boolean checkUserExist(Long userIdx){
         return userRepository.existsUserByUserIdx(userIdx);
     }
 
-    public String getNickNameByIdx(Integer userIdx) {
+    public String getNickNameByIdx(Long userIdx) {
         User user = userRepository.findUserByUserIdx(userIdx);
         return user.getNickName();
     }
 
     //해당 유저에게 친구요청 해보기
-    public void makeNewFriendshipRequest(Integer requesterIdx, String targetUUID) throws BaseException {
+    public void makeNewFriendshipRequest(Long requesterIdx, String targetUUID) throws BaseException {
         User user = userRepository.findByUuid(targetUUID);
         //1. 이미 친구 추가 된 경우 확인
         if(friendshipRepository.existsByFriendInfoAndAndStatus(new FriendId(requesterIdx,user.getUserIdx()),"ACTIVE")){
@@ -61,12 +61,12 @@ public class UserService {
         );
     }
 
-    public List<SimplifiedUserProfileDTO> getRequestedFriendShipWaiting(Integer userIdx, Pageable pageable) throws BaseException{
+    public List<SimplifiedUserProfileDTO> getRequestedFriendShipWaiting(Long userIdx, Pageable pageable) throws BaseException{
         //해당 유저에게 들어온 친구추가 요청을 확인하기..어찌넘길까
         List<Friendship> list = friendshipRepository.findAllByUserIdxInWaiting(userIdx,pageable).getContent();
         List<SimplifiedUserProfileDTO> data = new ArrayList<>();
         for (Friendship friendship : list) {
-            Integer other = friendship.getFriendInfo().getMinUserIdx() == userIdx?friendship.getFriendInfo().getMaxUserIdx() : friendship.getFriendInfo().getMinUserIdx();
+            Long other = friendship.getFriendInfo().getMinUserIdx() == userIdx?friendship.getFriendInfo().getMaxUserIdx() : friendship.getFriendInfo().getMinUserIdx();
             User user = userRepository.findUserByUserIdx(other);
             data.add(
                     SimplifiedUserProfileDTO.builder()
@@ -80,7 +80,7 @@ public class UserService {
         return data;
     }
 
-    public void determineFriendRequest(Integer userIdx, Integer targetIdx, boolean accept) throws BaseException{
+    public void determineFriendRequest(Long userIdx, Long targetIdx, boolean accept) throws BaseException{
         //해당 유저의 request를 처리하기
         FriendId friendId = new FriendId(userIdx,targetIdx);
         boolean already = friendshipRepository.existsByFriendInfoAndAndStatus(friendId,"ACTIVE");
@@ -102,7 +102,7 @@ public class UserService {
         }
     }
 
-    public void makeBlock(Integer myIdx, Integer blockUserIdx) throws BaseException{
+    public void makeBlock(Long myIdx, Long blockUserIdx) throws BaseException{
         //block tuple을 생성
         BlockId info = new BlockId(myIdx,blockUserIdx);
         if(blockRepository.existsByBlockInfo(info)){

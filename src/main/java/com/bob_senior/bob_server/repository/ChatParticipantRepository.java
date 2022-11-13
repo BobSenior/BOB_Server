@@ -8,31 +8,34 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.List;
 
-public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Integer> {
+public interface ChatParticipantRepository extends JpaRepository<ChatParticipant, Long> {
 
-    boolean existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Integer chatRoomIdx, Integer chatParticipantIdx);
+    boolean existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Long chatRoomIdx, Long chatParticipantIdx);
 
-    ChatParticipant getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Integer chatRoomIdx,Integer chatParticipantIdx);
+    ChatParticipant getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Long chatRoomIdx,Long chatParticipantIdx);
 
     @Query(value = "select cp.lastRead from ChatParticipant cp where cp.chatNUser.userIdx = :participant")
-    Timestamp getLastReadByUserIdx(@Param("participant") Integer participantIdx);
+    Timestamp getLastReadByUserIdx(@Param("participant") Long participantIdx);
 
     ChatParticipant findChatParticipantByChatNUser(ChatNUser rau);
 
-    Long countChatParticipantByChatNUser_ChatRoomIdx(Integer chatRoomIdx);
+    Long countChatParticipantByChatNUser_ChatRoomIdx(Long chatRoomIdx);
 
+    @Transactional
     @Modifying
     @Query(value = "update ChatParticipant cp set cp.lastRead = :timestamp, cp.status = 'Q' where cp.chatNUser.chatRoomIdx = :roomIdx and cp.chatNUser.userIdx = :userIdx")
-    void updateTimeStamp(@Param("timestamp") Timestamp ts, @Param("roomIdx") Integer chatIdx, @Param("userIdx") Integer userIdx);
+    void updateTimeStamp(@Param("timestamp") Timestamp ts, @Param("roomIdx") Long chatIdx, @Param("userIdx") Long userIdx);
 
+    @Transactional
     @Modifying
     @Query(value = "update ChatParticipant cp set cp.status = 'A' where cp.chatNUser.userIdx = :userIdx and cp.chatNUser.chatRoomIdx = :roomIdx")
-    void activateParticipation(@Param("userIdx") Integer userIdx, @Param("roomIdx") Integer roomIdx);
+    void activateParticipation(@Param("userIdx") Long userIdx, @Param("roomIdx") Long roomIdx);
 
     @Query(value = "select cp from ChatParticipant cp where cp.status = 'Q' and cp.chatNUser.userIdx = :userIdx")
-    List<ChatParticipant> getTotalUnreadChatNumber(@Param("userIdx") Integer userIdx);
+    List<ChatParticipant> getTotalUnreadChatNumber(@Param("userIdx") Long userIdx);
 }

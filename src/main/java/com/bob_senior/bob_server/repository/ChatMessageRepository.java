@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.sql.Timestamp;
 
-public interface ChatMessageRepository extends JpaRepository<ChatMessage,Integer> {
-    Long countChatMessagesByChatRoom_ChatRoomIdxAndSentAtAfter(Integer chatRoomIdx, Timestamp sentAt);
+public interface ChatMessageRepository extends JpaRepository<ChatMessage,Long> {
+    Long countChatMessagesByChatRoom_ChatRoomIdxAndSentAtAfter(Long chatRoomIdx, Timestamp sentAt);
 }

@@ -10,7 +10,7 @@ public class PostPhoto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer postPhotoIdx;
+    private Long postPhotoIdx;
 
     @Column(name = "postPhotoUrl")
     private String postPhotoUrl;

@@ -14,8 +14,8 @@ import java.io.Serializable;
 public class ChatNUser implements Serializable {
 
     @Column(name = "chatRoomIdx")
-    private Integer chatRoomIdx;
+    private Long chatRoomIdx;
     @Column(name = "userIdx")
-    private Integer userIdx;
+    private Long userIdx;
 
 }

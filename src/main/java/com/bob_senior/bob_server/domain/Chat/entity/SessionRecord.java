@@ -5,11 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "SessionRecord")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -20,8 +19,8 @@ public class SessionRecord {
     private String sessionId;
 
     @Column
-    private Integer userIdx;
+    private Long userIdx;
 
     @Column
-    private Integer chatIdx;
+    private Long chatIdx;
 }

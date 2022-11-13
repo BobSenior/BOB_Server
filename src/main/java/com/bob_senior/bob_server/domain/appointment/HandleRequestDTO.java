@@ -7,9 +7,9 @@ import lombok.Setter;
 @Setter
 public class HandleRequestDTO {
 
-    private Integer makerIdx;
+    private Long makerIdx;
 
-    private Integer requesterIdx;
+    private Long requesterIdx;
 
     private boolean accept;
 }

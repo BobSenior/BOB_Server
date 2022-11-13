@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer postIdx;
+    private Long postIdx;
 
     @Column(name = "writerIdx")
-    private Integer writerIdx;
+    private Long writerIdx;
 
     @Column(name = "title")
     private String title;
@@ -51,5 +51,5 @@ public class Post {
     private String participantConstraint;
 
     @Column
-    private Integer chatRoomIdx;
+    private Long chatRoomIdx;
 }

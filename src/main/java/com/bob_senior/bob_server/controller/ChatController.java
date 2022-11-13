@@ -49,9 +49,9 @@ public class ChatController {
     //채팅방에 참여
     @MessageMapping("/stomp/init/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public BaseResponse enterChatRoom(ChatDto msg, @DestinationVariable int roomId){
+    public BaseResponse enterChatRoom(ChatDto msg, @DestinationVariable Long roomId){
         //1. 새로 들어온 유저를 채팅방에 등록
-        Integer userIdx = msg.getSenderIdx();
+        Long userIdx = msg.getSenderIdx();
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
@@ -71,9 +71,9 @@ public class ChatController {
     //채팅보내기
     @MessageMapping("/stomp/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable int roomId){
+    public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable Long roomId){
         //verify_if_chatroom_exist(roomId);
-        Integer user = msg.getSenderIdx();
+        Long user = msg.getSenderIdx();
         if(!userService.checkUserExist(user)){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
@@ -96,7 +96,7 @@ public class ChatController {
     //채팅방 나가기
     @MessageMapping("/stomp/exit/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public BaseResponse exitChatRoom(@DestinationVariable int roomId, Integer sender){
+    public BaseResponse exitChatRoom(@DestinationVariable Long roomId, Long sender){
         if(!userService.checkUserExist(sender)){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
@@ -118,8 +118,9 @@ public class ChatController {
 
     //첫 연결시 거치는 api
     @MessageMapping("/stomp/record/{roomId}")
-    public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable int roomId, SessionAndClientRecord sessionAndClientRecord){
+    public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable Long roomId, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
+        System.out.println("i got it");
         chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomId);
         sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomId));
         return new BaseResponse(BaseResponseStatus.SUCCESS);
@@ -130,7 +131,7 @@ public class ChatController {
 
     // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
-    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable int roomId, final Pageable pageable){
+    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable Long roomId, final Pageable pageable){
         //pageable = requestParam으로 받음
         //format :
         try {
@@ -155,7 +156,7 @@ public class ChatController {
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
     //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
-    public BaseResponse getUnreadChatNum(@PathVariable int roomId, int userIdx){
+    public BaseResponse getUnreadChatNum(@PathVariable Long roomId, Long userIdx){
         //해당 유저가 valid한지 먼저 확인
         if(!userService.checkUserExist(userIdx)){
             //TODO : 유저 존재하지 않을 경우 handling - exception을 던져도 되고
@@ -171,20 +172,4 @@ public class ChatController {
     }
 
 
-
-
-
-
-    //test method
-    @GetMapping("test")
-    public void addMsg(){
-        ChatDto chat = ChatDto.builder()
-                .senderIdx(1111)
-                .type("MESSAGE")
-                .channelId("2222")
-                .data("epoch")
-                .build();
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        chatService.storeNewMessage(chat,ts,1);
-    }
 }

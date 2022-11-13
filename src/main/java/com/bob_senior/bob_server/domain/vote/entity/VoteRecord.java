@@ -15,7 +15,7 @@ public class VoteRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer voteRecordIdx;
+    private Long voteRecordIdx;
 
     @Embedded
     private VoteId voteId;

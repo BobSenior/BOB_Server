@@ -14,7 +14,7 @@ public class Block {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer blockIdx;
+    private Long blockIdx;
 
 
     @Embedded

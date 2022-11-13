@@ -7,9 +7,9 @@ import lombok.Setter;
 @Setter
 public class UserVoteDTO {
 
-    private Integer voteIdx;
+    private Long voteIdx;
 
-    private Integer userIdx;
+    private Long userIdx;
 
     private Integer voteSelect;
 

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class RequestFriendshipDTO {
 
-    private Integer requesterIdx;
+    private Long requesterIdx;
 
     private String targetUUID;
 

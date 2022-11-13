@@ -14,13 +14,13 @@ import java.io.Serializable;
 public class FriendId implements Serializable {
 
     @Column(name = "minUserIdx")
-    private Integer minUserIdx;
+    private Long minUserIdx;
 
     @Column(name = "maxUseridx")
-    private Integer maxUserIdx;
+    private Long maxUserIdx;
 
 
-    public FriendId(Integer user1, Integer user2) {
+    public FriendId(Long user1, Long user2) {
         this.minUserIdx = Math.min(user1,user2);
         this.maxUserIdx = Math.max(user1,user2);
     }

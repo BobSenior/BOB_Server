@@ -18,7 +18,7 @@ public class VoteId implements Serializable {
 
     @Column(name = "voteIdx")
     //어떤 vote에 대응하는지
-    private Integer voteIdx;
+    private Long voteIdx;
 
     @Column(name = "choice")
     //몇번째 선택지인지

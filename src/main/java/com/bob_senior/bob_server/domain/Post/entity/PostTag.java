@@ -12,7 +12,7 @@ public class PostTag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer postTagIdx;
+    private Long postTagIdx;
 
 
     @Column(name = "tagContent")

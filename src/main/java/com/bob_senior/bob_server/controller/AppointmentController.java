@@ -41,7 +41,7 @@ public class AppointmentController {
 
     //내가 참여할 수 있는 appointment들을 가져오기
     @GetMapping("/appointment/list")
-    public BaseResponse getReachableAppointmentPage(Pageable pageable,@RequestBody Integer userIdx){
+    public BaseResponse getReachableAppointmentPage(Pageable pageable,@RequestBody Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -54,7 +54,7 @@ public class AppointmentController {
 
     //해당 약속 홈화면 정보 가져오기
     @GetMapping("/appointment/{roomIdx}")
-    public BaseResponse getAppointmentHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx){
+    public BaseResponse getAppointmentHomeView(@PathVariable Long roomIdx,@RequestParam Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -70,7 +70,7 @@ public class AppointmentController {
 
     //post의 홈화면 가져오기
     @GetMapping("/post/{roomIdx}")
-    public BaseResponse getPostHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx ){
+    public BaseResponse getPostHomeView(@PathVariable Long roomIdx,@RequestParam Long userIdx ){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -90,7 +90,7 @@ public class AppointmentController {
 
     //현재 신청 대기중인 게시글 head(page)
     @GetMapping("/appointment/waiting")
-    public BaseResponse getMyWaitingParticipantList(@RequestParam Integer userIdx,
+    public BaseResponse getMyWaitingParticipantList(@RequestParam Long userIdx,
                                                     Pageable pageable){
 
         if(!userService.checkUserExist(userIdx)){
@@ -109,7 +109,7 @@ public class AppointmentController {
 
     //현재 참여중인 post의 head들을 가져오기
     @GetMapping("/appointment/ongoing")
-    public BaseResponse getMyParticipatedAppointmentList(@RequestParam Integer userIdx,
+    public BaseResponse getMyParticipatedAppointmentList(@RequestParam Long userIdx,
                                                          Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
@@ -141,7 +141,7 @@ public class AppointmentController {
 
     //현 post에 걸린 참가요청 리스트 받아오기
     @GetMapping("/appointment/waiting/{postIdx}")
-    public BaseResponse getRequestedParticipationHeadList(@PathVariable Integer postIdx, @RequestBody Integer userIdx,
+    public BaseResponse getRequestedParticipationHeadList(@PathVariable Long postIdx, @RequestBody Long userIdx,
                                                           Pageable pageable){
         //1. 유효한 user인지
         if(!userService.checkUserExist(userIdx)){
@@ -165,7 +165,7 @@ public class AppointmentController {
 
     //해당 참가 요청 거절 or 수락 -> 이건 그냥 boolean 값을 받으면 될듯
     @PostMapping("/appointment/determine/{postIdx}")
-    public BaseResponse setUserRequestToAcceptOrReject(@PathVariable Integer postIdx, @RequestBody HandleRequestDTO handleRequestDTO){
+    public BaseResponse setUserRequestToAcceptOrReject(@PathVariable Long postIdx, @RequestBody HandleRequestDTO handleRequestDTO){
         //1. 의사결정자의 userIdx가 올바른지 확인
         if(!(userService.checkUserExist(handleRequestDTO.getRequesterIdx()))){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
@@ -193,7 +193,7 @@ public class AppointmentController {
 
     //초대기능 -> 무조건 방장만 할 수 있게
     @PostMapping("/appointment/invite/{postIdx}")
-    public BaseResponse inviteUserIntoPostByUUID(@PathVariable Integer postIdx, @RequestBody UserInviteDTO inviteDTO){
+    public BaseResponse inviteUserIntoPostByUUID(@PathVariable Long postIdx, @RequestBody UserInviteDTO inviteDTO){
         if(!(userService.checkUserExist(inviteDTO.getInviterIdx()))){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -219,7 +219,7 @@ public class AppointmentController {
 
     //주어진 검색어로 title기반 search
     @GetMapping("/appointment/search")
-    public BaseResponse getPostSearchResult(@RequestParam Integer userIdx, @RequestParam String searchString,Pageable pageable){
+    public BaseResponse getPostSearchResult(@RequestParam Long userIdx, @RequestParam String searchString,Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -233,7 +233,7 @@ public class AppointmentController {
 
     //tag를 통한 search -> multi-tag?
     @GetMapping("/appointment/search/tags")
-    public BaseResponse getPostSearchResultByTags(@RequestParam Integer userIdx,@RequestParam String tag,Pageable pageable ){
+    public BaseResponse getPostSearchResultByTags(@RequestParam Long userIdx,@RequestParam String tag,Pageable pageable ){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

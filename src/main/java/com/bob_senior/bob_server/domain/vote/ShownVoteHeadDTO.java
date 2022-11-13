@@ -10,7 +10,7 @@ import lombok.*;
 public class ShownVoteHeadDTO {
     //카톡의 투표 기능을 보고 따옴
 
-    private Integer voteIdx;
+    private Long voteIdx;
 
     private String title;
 

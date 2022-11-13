@@ -14,8 +14,8 @@ import java.io.Serializable;
 public class BlockId implements Serializable {
 
     @Column
-    private Integer blockRequestUserIdx;
+    private Long blockRequestUserIdx;
 
     @Column
-    private Integer blockUserIdx;
+    private Long blockUserIdx;
 }
