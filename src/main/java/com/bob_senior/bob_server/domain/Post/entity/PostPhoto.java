@@ -12,8 +12,8 @@ public class PostPhoto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer postPhotoIdx;
 
-    @Embedded
-    private PhotoId photoId;
+    @Column(name = "postPhotoUrl")
+    private String postPhotoUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "postIdx")

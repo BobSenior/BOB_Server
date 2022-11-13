@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface VoteParticipatedRepository extends JpaRepository<VoteParticipated,Integer> {
 
-    boolean existsVoteParticipatedByUserIdxAndVoteIdx(Integer userIdx, Integer voteIdx);
+    boolean existsVoteParticipatedByUserIdxAndVote_VoteIdx(Integer userIdx, Integer voteIdx);
+
 
 }

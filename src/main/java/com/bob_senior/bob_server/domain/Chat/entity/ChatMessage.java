@@ -18,9 +18,6 @@ public class ChatMessage {
     private Integer messageIdx;
 
     @Column
-    private Integer chatRoomIdx;
-
-    @Column
     private Integer senderIdx;
 
     @Column

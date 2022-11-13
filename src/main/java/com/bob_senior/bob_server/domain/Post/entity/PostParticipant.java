@@ -29,7 +29,4 @@ public class PostParticipant {
      * 연관관계
      */
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "postIdx")
-    private Post post;
 }

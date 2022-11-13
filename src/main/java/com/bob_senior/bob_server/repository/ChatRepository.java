@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 
 public interface ChatRepository extends JpaRepository<ChatMessage,Integer> {
-    Page<ChatMessage> findByChatRoomIdx(Integer chatRoomIdx, Pageable pageable);
+    Page<ChatMessage> findByChatRoom_ChatRoomIdx(Integer chatRoomIdx, Pageable pageable);
 
     Long countBySentAtAfter(LocalDateTime lastRead);
 }

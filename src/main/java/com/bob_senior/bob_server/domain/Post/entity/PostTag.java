@@ -14,8 +14,9 @@ public class PostTag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer postTagIdx;
 
-    @Embedded
-    private TagId tag;
+
+    @Column(name = "tagContent")
+    private String tagContent;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "postIdx")

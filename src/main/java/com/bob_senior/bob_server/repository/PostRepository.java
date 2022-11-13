@@ -33,10 +33,10 @@ public interface PostRepository extends JpaRepository<Post,Integer> {
 
     //activate이면서 + constraint가 ANY or input과 동일한 것들을 가져오기
     @Query(value = "select p from Post p where p.recruitmentStatus = 'ACTIVATE' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
-    Page<Post> getAllThatCanParticipant(@Param("dep") String dep);
+    Page<Post> getAllThatCanParticipant(@Param("dep") String dep,Pageable pageable);
 
     Page<Post> findAllByTitleLike(String title, Pageable pageable);
 
     @Query(value = "select p from Post p where p.recruitmentStatus = 'ACTIVATE' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title like %:string%")
-    Page<Post> searchAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("string ") String string,Pageable pageable);
+    Page<Post> searchAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("string") String string,Pageable pageable);
 }

@@ -113,7 +113,7 @@ public class AppointmentService {
                             .title(post.getTitle())
                             .writtenAt(post.getRegisteredAt())
                             .imageURL(
-                                    postPhotoRepository.findPostPhotoByPhotoId_PostIdx(post.getPostIdx()).getPhotoId().getPostPhotoUrl()
+                                    postPhotoRepository.findPostPhotoByPost_PostIdx(post.getPostIdx()).getPostPhotoUrl()
                             )
                             .writer(writer_simp)
                             .location(post.getPlace())
@@ -159,7 +159,7 @@ public class AppointmentService {
                             .title(post.getTitle())
                             .writtenAt(post.getRegisteredAt())
                             .imageURL(
-                                    postPhotoRepository.findPostPhotoByPhotoId_PostIdx(post.getPostIdx()).getPhotoId().getPostPhotoUrl()
+                                    postPhotoRepository.findPostPhotoByPost_PostIdx(post.getPostIdx()).getPostPhotoUrl()
                             )
                             .writer(writer_simp)
                             .location(post.getPlace())
@@ -283,7 +283,7 @@ public class AppointmentService {
     public List<AppointmentHeadDTO> getAvailableAppointmentList(Integer userIdx, Pageable pageable) {
         //1. 유저의 소속정보 가져오기(school, dep, year)
         User user = userRepository.findUserByUserIdx(userIdx);
-        List<Post> posts = postRepository.getAllThatCanParticipant(user.getDepartment()).getContent();
+        List<Post> posts = postRepository.getAllThatCanParticipant(user.getDepartment(),pageable).getContent();
         List<AppointmentHeadDTO> data = new ArrayList<>();
         for (Post post : posts) {
 
@@ -296,7 +296,7 @@ public class AppointmentService {
                     AppointmentHeadDTO.builder()
                             .title(post.getTitle())
                             .imageURL(
-                                    postPhotoRepository.findPostPhotoByPhotoId_PostIdx(post.getPostIdx()).getPhotoId().getPostPhotoUrl()
+                                    postPhotoRepository.findPostPhotoByPost_PostIdx(post.getPostIdx()).getPostPhotoUrl()
                             )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
@@ -385,7 +385,7 @@ public class AppointmentService {
                             .title(post.getTitle())
                             .writtenAt(post.getRegisteredAt())
                             .imageURL(
-                                    postPhotoRepository.findPostPhotoByPhotoId_PostIdx(post.getPostIdx()).getPhotoId().getPostPhotoUrl()
+                                    postPhotoRepository.findPostPhotoByPost_PostIdx(post.getPostIdx()).getPostPhotoUrl()
                             )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
@@ -410,7 +410,7 @@ public class AppointmentService {
 
     public List<AppointmentHeadDTO> searchByTag(Integer userIdx, String tag, Pageable pageable) throws BaseException{
         //1. tag의 존재 여부
-        boolean isExist = postTagRepository.existsByTag_TagContent(tag);
+        boolean isExist = postTagRepository.existsByTagContent(tag);
         if(!isExist) throw new BaseException(BaseResponseStatus.TAG_DOES_NOT_EXIST);
 
         //2. 해당 태그를 가지는 모든 post를 가져와서 가공
@@ -429,7 +429,7 @@ public class AppointmentService {
                             .title(post.getTitle())
                             .writtenAt(post.getRegisteredAt())
                             .imageURL(
-                                    postPhotoRepository.findPostPhotoByPhotoId_PostIdx(post.getPostIdx()).getPhotoId().getPostPhotoUrl()
+                                    postPhotoRepository.findPostPhotoByPost_PostIdx(post.getPostIdx()).getPostPhotoUrl()
                             )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
@@ -485,10 +485,10 @@ public class AppointmentService {
         }
 
         //tag의 head들을 전부 가져오기
-        List<PostTag> tags = postTagRepository.findAllByTag_PostIdx(roomIdx);
+        List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(roomIdx);
         List<String> heads = new ArrayList<>();
         for (PostTag tag : tags) {
-            heads.add(tag.getTag().getTagContent());
+            heads.add(tag.getTagContent());
         }
 
         boolean isRequested = postParticipantRepository.existsByPostUser(new PostUser(roomIdx,userIdx));

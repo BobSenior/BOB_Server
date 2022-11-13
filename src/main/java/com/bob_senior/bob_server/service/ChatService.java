@@ -8,6 +8,7 @@ import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.repository.ChatMessageRepository;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
 import com.bob_senior.bob_server.repository.ChatRepository;
+import com.bob_senior.bob_server.repository.ChatRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,17 +27,19 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Autowired
-    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository){
+    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository){
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRepository = chatRepository;
         this.chatMessageRepository = chatMessageRepository;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
     //채팅 페이지 가져오기
     public ChatPage loadChatPageData(Pageable pageable, int roomIdx) throws BaseException {
-        Page<ChatMessage> pages =  chatRepository.findByChatRoomIdx(roomIdx,pageable);
+        Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdx(roomIdx,pageable);
         List<ChatDto> chats = new ArrayList<>();
         for (ChatMessage page : pages) {
             Integer sender = page.getSenderIdx();
@@ -89,7 +92,7 @@ public class ChatService {
         Long total = 0L;
         for (ChatParticipant participant : participants) {
             int chatRoomIdx = participant.getChatNUser().getChatRoomIdx();
-            total += chatMessageRepository.countChatMessagesByChatRoomIdxAndSentAtAfter(chatRoomIdx,participant.getLastRead());
+            total += chatMessageRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtAfter(chatRoomIdx,participant.getLastRead());
         }
         return total;
     }
@@ -113,7 +116,7 @@ public class ChatService {
     public void  storeNewMessage(ChatDto msg,Timestamp ts,Integer roomIdx) {
         String chatId = UUID.randomUUID().toString();
         ChatMessage cmg = ChatMessage.builder()
-                .chatRoomIdx(roomIdx)
+                .chatRoom(chatRoomRepository.getReferenceById(roomIdx))
                 .senderIdx(msg.getSenderIdx())
                 .sentAt(ts)
                 .msgContent(msg.getData())

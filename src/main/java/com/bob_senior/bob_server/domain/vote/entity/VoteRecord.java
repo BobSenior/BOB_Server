@@ -26,9 +26,4 @@ public class VoteRecord {
     @Column
     private Integer count;
 
-    //참여한 user에 대한 정보를 어디서 보관해야되나....
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "voteIdx")
-    private Vote vote;
 }

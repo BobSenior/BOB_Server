@@ -21,16 +21,12 @@ public class ChatParticipant {
     @Embedded
     private ChatNUser chatNUser;
 
+
     @Column(length = 45)
     private String status;
 
     @Column
     private Timestamp lastRead;
-
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chatRoomIdx")
-    private ChatRoom chatRoom;
 
 
 }

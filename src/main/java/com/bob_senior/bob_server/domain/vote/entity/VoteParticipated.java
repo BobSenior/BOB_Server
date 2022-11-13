@@ -13,7 +13,8 @@ import javax.persistence.*;
 public class VoteParticipated {
 
     @Id
-    private Integer voteIdx;
+    private Integer voteParticipatedIdx;
+
 
     @Column
     private Integer userIdx;

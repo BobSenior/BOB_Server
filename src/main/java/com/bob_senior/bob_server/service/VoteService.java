@@ -48,11 +48,11 @@ public class VoteService {
 
 
     public boolean checkIfVoteIsValid(int roomIdx, int voteIdx){
-        return voteRepository.existsByVoteIdxAndVoteRoomIdx(voteIdx,roomIdx);
+        return voteRepository.existsByVoteIdxAndPostIdx(voteIdx,roomIdx);
     }
 
     public boolean hasActivatedVoteInRoom(int postIdx){
-        return voteRepository.existsVoteByPostIdxAndActivated(postIdx,1);
+        return voteRepository.existsVoteByPostIdxAndIsActivated(postIdx,1);
     }
 
 
@@ -60,7 +60,7 @@ public class VoteService {
 
     public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(int postIdx, int userIdx, Pageable pageable) throws BaseException{
         //1. 현재 postIdx에 걸린 activated vote를 전부 가져오기
-        List<Vote> lists = voteRepository.findAllByActivatedAndPostIdx("ACTIVATED",postIdx,pageable).getContent();
+        List<Vote> lists = voteRepository.findAllByIsActivatedAndPostIdx("ACTIVATED",postIdx,pageable).getContent();
 
         List<ShownVoteHeadDTO> dtos = new ArrayList<>();
         for (Vote vote : lists) {
@@ -70,7 +70,7 @@ public class VoteService {
                             .voteIdx(vote.getVoteIdx())
                             .participatedNum(vote.getParticipatedNum())
                             .participated(
-                                    voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVoteIdx(userIdx,vote.getVoteIdx())
+                                    voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVote_VoteIdx(userIdx,vote.getVoteIdx())
                             )
                             .build()
             );
@@ -100,7 +100,7 @@ public class VoteService {
     public ShownVoteDTO applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
         Vote vote = voteRepository.findVoteByVoteIdx(userVoteDTO.getVoteIdx());
         // 해당 유저가 이미 vote 했는지 확인
-        boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVoteIdx(
+        boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVote_VoteIdx(
                 userVoteDTO.getUserIdx(), userVoteDTO.getVoteIdx()
         );
         if(already_participated){
@@ -123,7 +123,7 @@ public class VoteService {
         //3. 유저의 vote를 participated에 보관
         voteParticipatedRepository.save(
                 VoteParticipated.builder()
-                        .voteIdx(userVoteDTO.getVoteIdx())
+                        .vote(vote)
                         .userIdx(userVoteDTO.getUserIdx())
                         .build()
         );
@@ -147,7 +147,7 @@ public class VoteService {
     public ShownVoteDTO makeNewVote(MakeVoteDTO makeVoteDTO, LocalDateTime ldt, Integer roomIdx) throws BaseException{
 
         //0 . 이미 존재하는 vote인지 한번 검사 - votename & timestamp로 검사하면 될듯?
-        if(voteRepository.existsVoteByVoteNameAndActivated(makeVoteDTO.getTitle(), ldt)){
+        if(voteRepository.existsVoteByTitleAndIsActivated(makeVoteDTO.getTitle(), ldt)){
             throw new BaseException(BaseResponseStatus.ALREADY_EXIST_VOTE_CONTENT);
         }
 

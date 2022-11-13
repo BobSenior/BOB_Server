@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PostPhotoRepository extends JpaRepository<PostPhoto, Integer> {
 
 
-    PostPhoto findPostPhotoByPhotoId_PostIdx(Integer postIdx);
+    PostPhoto findPostPhotoByPost_PostIdx(Integer postIdx);
     
 
 

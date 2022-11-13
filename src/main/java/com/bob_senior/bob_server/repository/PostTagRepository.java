@@ -14,15 +14,16 @@ public interface PostTagRepository extends JpaRepository<PostTag,Integer> {
     @Query(
             value = "select t " +
                     "from PostTag t join fetch t.post " +
-                    "where t.tag.tagContent like %:content% " +
+                    "where t.tagContent like %:content% " +
                     "and t.post.recruitmentStatus = 'ACTIVATE'" +
                     "and (t.post.participantConstraint = 'ANY' or t.post.participantConstraint = :dep) "
-    )
+    ,nativeQuery = true)
     Page<PostTag> searchTagThatCanParticipate(@Param("content") String content, @Param("dep") String dep, Pageable pageable);
 
 
-    boolean existsByTag_TagContent(String tagContent);
+    boolean existsByTagContent(String tagContent);
 
-    List<PostTag> findAllByTag_PostIdx(Integer postIdx);
+    List<PostTag> findAllByPost_PostIdx(Integer postIdx);
+
 
 }
