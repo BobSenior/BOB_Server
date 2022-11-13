@@ -32,7 +32,7 @@ public class Post {
     @Column(name = "recruitmentStatus")
     private String recruitmentStatus;
 
-    @Column(name = "registeredAt")
+    @Column(name = "registerdAt")
     private Timestamp registeredAt;
 
     @Column(name = "viewCount")

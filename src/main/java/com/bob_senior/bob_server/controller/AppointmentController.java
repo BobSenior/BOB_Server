@@ -8,6 +8,7 @@ import com.bob_senior.bob_server.domain.appointment.UserInviteDTO;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
+import com.bob_senior.bob_server.domain.user.UserIdxDTO;
 import com.bob_senior.bob_server.service.AppointmentService;
 import com.bob_senior.bob_server.service.ChatService;
 import com.bob_senior.bob_server.service.UserService;
@@ -21,7 +22,7 @@ import java.util.List;
 
 
 @Slf4j
-@Controller
+@RestController
 public class AppointmentController {
 
     private final UserService userService;
@@ -40,8 +41,8 @@ public class AppointmentController {
 
 
     //내가 참여할 수 있는 appointment들을 가져오기
-    @GetMapping("/appointment/list")
-    public BaseResponse getReachableAppointmentPage(Pageable pageable,@RequestBody Long userIdx){
+    @GetMapping("/appointment/list/{userIdx}")
+    public BaseResponse getReachableAppointmentPage(Pageable pageable,@PathVariable Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -54,7 +55,8 @@ public class AppointmentController {
 
     //해당 약속 홈화면 정보 가져오기
     @GetMapping("/appointment/{roomIdx}")
-    public BaseResponse getAppointmentHomeView(@PathVariable Long roomIdx,@RequestParam Long userIdx){
+    public BaseResponse getAppointmentHomeView(@PathVariable Long roomIdx,@RequestBody UserIdxDTO userIdxDTO){
+        Long userIdx = userIdxDTO.getUserIdx();
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -89,8 +91,8 @@ public class AppointmentController {
 
 
     //현재 신청 대기중인 게시글 head(page)
-    @GetMapping("/appointment/waiting")
-    public BaseResponse getMyWaitingParticipantList(@RequestParam Long userIdx,
+    @GetMapping("/appointment/waiting/{userIdx}")
+    public BaseResponse getMyWaitingParticipantList(@PathVariable Long userIdx,
                                                     Pageable pageable){
 
         if(!userService.checkUserExist(userIdx)){
@@ -140,7 +142,7 @@ public class AppointmentController {
 
 
     //현 post에 걸린 참가요청 리스트 받아오기
-    @GetMapping("/appointment/waiting/{postIdx}")
+    @GetMapping("/appointment/request/waiting/{postIdx}")
     public BaseResponse getRequestedParticipationHeadList(@PathVariable Long postIdx, @RequestBody Long userIdx,
                                                           Pageable pageable){
         //1. 유효한 user인지
@@ -219,7 +221,8 @@ public class AppointmentController {
 
     //주어진 검색어로 title기반 search
     @GetMapping("/appointment/search")
-    public BaseResponse getPostSearchResult(@RequestParam Long userIdx, @RequestParam String searchString,Pageable pageable){
+    public BaseResponse getPostSearchResult(@RequestBody UserIdxDTO userIdxDTO, @RequestParam String searchString,Pageable pageable){
+        long userIdx = userIdxDTO.getUserIdx();
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -233,7 +236,8 @@ public class AppointmentController {
 
     //tag를 통한 search -> multi-tag?
     @GetMapping("/appointment/search/tags")
-    public BaseResponse getPostSearchResultByTags(@RequestParam Long userIdx,@RequestParam String tag,Pageable pageable ){
+    public BaseResponse getPostSearchResultByTags(@RequestBody UserIdxDTO userIdxDTO,@RequestParam String tag,Pageable pageable ){
+        long userIdx = userIdxDTO.getUserIdx();
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

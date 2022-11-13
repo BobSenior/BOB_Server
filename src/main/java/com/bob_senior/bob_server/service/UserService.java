@@ -30,7 +30,7 @@ public class UserService {
     }
 
     public boolean checkUserExist(Long userIdx){
-        return userRepository.existsUserByUserIdx(userIdx);
+        return userRepository.existsById(userIdx);
     }
 
     public String getNickNameByIdx(Long userIdx) {

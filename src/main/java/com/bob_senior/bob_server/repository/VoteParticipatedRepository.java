@@ -8,4 +8,5 @@ public interface VoteParticipatedRepository extends JpaRepository<VoteParticipat
     boolean existsVoteParticipatedByUserIdxAndVote_VoteIdx(Long userIdx, Long voteIdx);
 
 
+
 }

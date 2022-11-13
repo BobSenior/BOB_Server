@@ -19,7 +19,7 @@ import java.util.List;
 
 
 @Log4j2
-@Controller
+@RestController
 public class UserController {
 
     private final UserService userService;

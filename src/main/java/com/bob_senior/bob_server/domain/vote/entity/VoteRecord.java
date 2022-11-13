@@ -5,7 +5,7 @@ import lombok.*;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name = "voteRecord")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -20,7 +20,7 @@ public class VoteRecord {
     @Embedded
     private VoteId voteId;
 
-    @Column
+    @Column(name = "content")
     private String voteContent;
 
     @Column

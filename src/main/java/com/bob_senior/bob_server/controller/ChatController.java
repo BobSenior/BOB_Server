@@ -20,11 +20,13 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.Timestamp;
 
 @Slf4j
-@Controller
+@RestController
 public class ChatController {
 
     private final UserService userService;
@@ -120,7 +122,6 @@ public class ChatController {
     @MessageMapping("/stomp/record/{roomId}")
     public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable Long roomId, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
-        System.out.println("i got it");
         chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomId);
         sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomId));
         return new BaseResponse(BaseResponseStatus.SUCCESS);
@@ -131,7 +132,7 @@ public class ChatController {
 
     // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
-    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable Long roomId, final Pageable pageable){
+    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable Long roomId, Pageable pageable){
         //pageable = requestParam으로 받음
         //format :
         try {
@@ -156,7 +157,7 @@ public class ChatController {
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
     //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
-    public BaseResponse getUnreadChatNum(@PathVariable Long roomId, Long userIdx){
+    public BaseResponse getUnreadChatNum(@PathVariable Long roomId, @RequestBody Long userIdx){
         //해당 유저가 valid한지 먼저 확인
         if(!userService.checkUserExist(userIdx)){
             //TODO : 유저 존재하지 않을 경우 handling - exception을 던져도 되고

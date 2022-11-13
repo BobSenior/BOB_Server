@@ -12,6 +12,6 @@ public interface VoteRecordRepository extends JpaRepository<VoteRecord, Long> {
 
     List<VoteRecord> findAllByVoteId_VoteIdx(Long voteIdx);
 
-    VoteRecord findFirstByVoteId_VoteIdxOrderByCountDesc(Long voteIdx);
+    List<VoteRecord> findTop2ByVoteId_VoteIdxOrderByCountDesc(Long voteIdx);
 
 }

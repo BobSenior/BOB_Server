@@ -30,13 +30,10 @@ public class Vote {
     private LocalDateTime createdAt;
 
     @Column
-    private String isActivated;
+    private Integer isActivated;
 
     @Column
-    private Integer participatedNum;
-
-    @Column
-    private Integer maxNum;
+    private Integer participantNum;
 
     @Column
     private String voteType;

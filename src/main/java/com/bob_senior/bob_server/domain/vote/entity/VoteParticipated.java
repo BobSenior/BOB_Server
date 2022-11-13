@@ -4,7 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name = "voteParticipated")
 @Getter
 @Setter
 @Builder
@@ -13,7 +13,8 @@ import javax.persistence.*;
 public class VoteParticipated {
 
     @Id
-    private Long voteParticipatedIdx;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long voteParticipantIdx;
 
 
     @Column

@@ -13,15 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
 @Slf4j
-@Controller
+@RestController
 public class VoteController {
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -88,7 +85,8 @@ public class VoteController {
 
     //투표 생성 api
     @PostMapping("/vote/init/{roomIdx}")
-    public BaseResponse makeNewVoteToRoom(@PathVariable Long roomIdx, MakeVoteDTO makeVoteDTO){
+    public BaseResponse makeNewVoteToRoom(@PathVariable Long roomIdx, @RequestBody MakeVoteDTO makeVoteDTO){
+        System.out.println(makeVoteDTO.getContents());
         if(!userService.checkUserExist(makeVoteDTO.getMakerIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
             //...boilerplate....
@@ -120,7 +118,7 @@ public class VoteController {
 
     //투표 api
     @PostMapping("/vote/{roomId}")
-    public BaseResponse makeVote(@PathVariable Long roomId, UserVoteDTO userVoteDTO){
+    public BaseResponse makeVote(@PathVariable Long roomId, @RequestBody UserVoteDTO userVoteDTO){
         //1. 해당 유저가 적절한지 먼저 검사
         if(!userService.checkUserExist(userVoteDTO.getUserIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
@@ -150,7 +148,7 @@ public class VoteController {
 
     //투표 종료 api
     @PostMapping("/vote/terminate/{roomId}")
-    public BaseResponse terminateVote(@PathVariable Long roomId,TerminateVoteDTO terminateVoteDTO){
+    public BaseResponse terminateVote(@PathVariable Long roomId,@RequestBody TerminateVoteDTO terminateVoteDTO){
         //Q)terminate이후 바로 투표내용을 적용할것인가?
         //TODO : problem1 - 투표 결과 동률이 나올경우 어찌 처리할것인가?   2. 바로 반영 or owner가 알아서?
         if(!userService.checkUserExist(terminateVoteDTO.getTerminatorIdx())){

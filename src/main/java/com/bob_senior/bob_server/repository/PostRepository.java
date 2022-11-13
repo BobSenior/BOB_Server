@@ -26,7 +26,7 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Transactional
     @Modifying
     @Query(value = "update Post p set p.recruitmentStatus =:status where p.postIdx =:postIdx")
-    void applyVoteResultRecruitment(@Param("status") boolean status, @Param("postIdx") Long postIdx);
+    void applyVoteResultRecruitment(@Param("status") String status, @Param("postIdx") Long postIdx);
 
     Post findPostByPostIdx(Long postIdx);
 
