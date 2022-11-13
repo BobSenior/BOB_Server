@@ -8,7 +8,7 @@ import javax.persistence.Id;
 public class ChatRoom {
 
     @Id
-    private Integer chatRoomIdx;
+    private Long chatRoomIdx;
 
     @Column(name = "chatRoomName")
     private String chatRoomName;

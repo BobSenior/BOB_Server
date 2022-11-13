@@ -10,8 +10,7 @@ import lombok.*;
 public class ChatDto {
 
     private String type;
-    private Integer senderIdx;
-    private String channelId;
+    private Long senderIdx;
     private String data;
 
     public ChatDto(){

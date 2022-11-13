@@ -13,11 +13,11 @@ import javax.persistence.*;
 public class VoteParticipated {
 
     @Id
-    private Integer voteParticipatedIdx;
+    private Long voteParticipatedIdx;
 
 
     @Column
-    private Integer userIdx;
+    private Long userIdx;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voteIdx")

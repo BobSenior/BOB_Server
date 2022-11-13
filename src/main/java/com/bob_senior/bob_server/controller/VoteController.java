@@ -48,7 +48,7 @@ public class VoteController {
 
     //현재 채팅방에 activated의 vote리스트 가져오기
     @GetMapping("/appointment/vote/list/{roomIdx}")
-    public BaseResponse getCurrentActivatingVoteList(@PathVariable Integer roomIdx, @RequestBody Integer userIdx, Pageable pageable){
+    public BaseResponse getCurrentActivatingVoteList(@PathVariable Long roomIdx, @RequestBody Long userIdx, Pageable pageable){
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
             return new BaseResponse(BaseResponseStatus.NO_VOTE_IN_CHATROOM);
         }
@@ -67,7 +67,7 @@ public class VoteController {
 
     //특정vote데이터 가져오기
     @GetMapping("/appointment/vote/{roomIdx}/{voteIdx}")
-    public BaseResponse getSpecificVoteData(@PathVariable Integer roomIdx,@PathVariable Integer voteIdx){
+    public BaseResponse getSpecificVoteData(@PathVariable Long roomIdx,@PathVariable Long voteIdx){
         //1. 해당 vote가 유효한지 검사
         if(!voteService.checkIfVoteIsValid(roomIdx, voteIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_VOTE_ACCESS);
@@ -88,7 +88,7 @@ public class VoteController {
 
     //투표 생성 api
     @PostMapping("/vote/init/{roomIdx}")
-    public BaseResponse makeNewVoteToRoom(@PathVariable Integer roomIdx, MakeVoteDTO makeVoteDTO){
+    public BaseResponse makeNewVoteToRoom(@PathVariable Long roomIdx, MakeVoteDTO makeVoteDTO){
         if(!userService.checkUserExist(makeVoteDTO.getMakerIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
             //...boilerplate....
@@ -120,7 +120,7 @@ public class VoteController {
 
     //투표 api
     @PostMapping("/vote/{roomId}")
-    public BaseResponse makeVote(@PathVariable int roomId, UserVoteDTO userVoteDTO){
+    public BaseResponse makeVote(@PathVariable Long roomId, UserVoteDTO userVoteDTO){
         //1. 해당 유저가 적절한지 먼저 검사
         if(!userService.checkUserExist(userVoteDTO.getUserIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
@@ -150,7 +150,7 @@ public class VoteController {
 
     //투표 종료 api
     @PostMapping("/vote/terminate/{roomId}")
-    public BaseResponse terminateVote(@PathVariable int roomId,TerminateVoteDTO terminateVoteDTO){
+    public BaseResponse terminateVote(@PathVariable Long roomId,TerminateVoteDTO terminateVoteDTO){
         //Q)terminate이후 바로 투표내용을 적용할것인가?
         //TODO : problem1 - 투표 결과 동률이 나올경우 어찌 처리할것인가?   2. 바로 반영 or owner가 알아서?
         if(!userService.checkUserExist(terminateVoteDTO.getTerminatorIdx())){

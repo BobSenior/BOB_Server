@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class RequireBlockDTO {
 
-    private Integer myIdx;
-    private Integer blockUserIdx;
+    private Long myIdx;
+    private Long blockUserIdx;
 
 
 }

@@ -16,6 +16,6 @@ public class TagId implements Serializable {
 
 
     @Column(name = "postIdx")
-    private Integer postIdx;
+    private Long postIdx;
 
 }

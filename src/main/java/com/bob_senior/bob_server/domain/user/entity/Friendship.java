@@ -15,7 +15,7 @@ public class Friendship {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer friendshipIdx;
+    private Long friendshipIdx;
 
 
     @Embedded

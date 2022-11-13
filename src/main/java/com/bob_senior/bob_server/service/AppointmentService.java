@@ -42,7 +42,7 @@ public class AppointmentService {
 
 
 
-    public AppointmentViewDTO getAppointmentData(Integer postIdx) throws BaseException {
+    public AppointmentViewDTO getAppointmentData(Long postIdx) throws BaseException {
         Post post = postRepository.findPostByPostIdx(postIdx);
 
         List<UserProfile> buyer = new ArrayList<>();
@@ -84,7 +84,7 @@ public class AppointmentService {
 
 
 
-    public List<AppointmentHeadDTO> getUserWaitingAppointment(Integer userIdx, Pageable pageable) throws BaseException{
+    public List<AppointmentHeadDTO> getUserWaitingAppointment(Long userIdx, Pageable pageable) throws BaseException{
         //해당 유저의 waiting상태의 request을 전부 가져오기
         //List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
         List<PostParticipant> participantList = postParticipantRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
@@ -132,7 +132,7 @@ public class AppointmentService {
 
 
 
-    public List<AppointmentHeadDTO> getUserParticipatedAppointment(Integer userIdx, Pageable pageable) throws BaseException{
+    public List<AppointmentHeadDTO> getUserParticipatedAppointment(Long userIdx, Pageable pageable) throws BaseException{
 
         List<PostParticipant> list_participating = postParticipantRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"PARTICIPATE",pageable).getContent();
 
@@ -178,7 +178,7 @@ public class AppointmentService {
 
 
 
-    public void makeNewPostParticipation(int postIdx, int userIdx) throws BaseException{
+    public void makeNewPostParticipation(Long postIdx, Long userIdx) throws BaseException{
         //1. 일단 방이 존재하는지 확인
         boolean exist = postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"ACTIVATE");
         if(!exist) throw new BaseException(BaseResponseStatus.NON_EXIST_POSTIDX);
@@ -206,7 +206,7 @@ public class AppointmentService {
 
 
 
-    public boolean isOwnerOfPost(Integer userIdx, Integer postIdx) {
+    public boolean isOwnerOfPost(Long userIdx, Long postIdx) {
         //내가 해당 게시글의 owner인지 확인
         Post post = postRepository.findPostByPostIdx(postIdx);
         return post.getWriterIdx() == userIdx;
@@ -218,14 +218,14 @@ public class AppointmentService {
 
 
 
-    public boolean isPostExist(Integer postIdx) {
+    public boolean isPostExist(Long postIdx) {
         return postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"ACTIVATE");
     }
 
 
 
 
-    public List<SimplifiedUserProfileDTO> getAllRequestInPost(Integer postIdx, Pageable pageable) {
+    public List<SimplifiedUserProfileDTO> getAllRequestInPost(Long postIdx, Pageable pageable) {
         //모든 request의 head를 가져온다.
         List<PostParticipant> list = postParticipantRepository.findAllByPostUser_PostIdxAndStatus(postIdx,"WAITING",pageable).getContent();
         List<SimplifiedUserProfileDTO> data = new ArrayList<>();
@@ -244,7 +244,7 @@ public class AppointmentService {
 
 
 
-    public void determineRequestStatus(Integer postIdx, Integer requesterIdx, boolean accept) throws BaseException{
+    public void determineRequestStatus(Long postIdx, Long requesterIdx, boolean accept) throws BaseException{
         //1. 해당 request가 존재했는지 확인하는게 우선
         boolean isExist = postParticipantRepository.existsByPostUser(new PostUser(postIdx,requesterIdx));
         if(!isExist) throw new BaseException(BaseResponseStatus.NON_EXIST_POST_PARTICIPATION);
@@ -280,7 +280,7 @@ public class AppointmentService {
 
 
     //해당 유저가 접근가능한 약속 리스트 전부 가져오기
-    public List<AppointmentHeadDTO> getAvailableAppointmentList(Integer userIdx, Pageable pageable) {
+    public List<AppointmentHeadDTO> getAvailableAppointmentList(Long userIdx, Pageable pageable) {
         //1. 유저의 소속정보 가져오기(school, dep, year)
         User user = userRepository.findUserByUserIdx(userIdx);
         List<Post> posts = postRepository.getAllThatCanParticipant(user.getDepartment(),pageable).getContent();
@@ -323,7 +323,7 @@ public class AppointmentService {
 
 
     //해당 postIdx로 uuid의 유저를 초대
-    public void inviteUserByUUID(String invitedUUID, Integer postIdx) throws BaseException{
+    public void inviteUserByUUID(String invitedUUID, Long postIdx) throws BaseException{
         //일단 postIdx에 참여 가능여부를 확인
         Post post = postRepository.findPostByPostIdx(postIdx);
         int total = post.getParticipantLimit();
@@ -370,7 +370,7 @@ public class AppointmentService {
 
 
     //해당 string으로 검색하기 -> 타이틀 검색?
-    public List<AppointmentHeadDTO> searchByStringInTitle(Integer userIdx,String searchString, Pageable pageable) throws BaseException {
+    public List<AppointmentHeadDTO> searchByStringInTitle(Long userIdx,String searchString, Pageable pageable) throws BaseException {
         List<AppointmentHeadDTO> heads = new ArrayList<>();
         String dep = userRepository.findUserByUserIdx(userIdx).getDepartment();
         List<Post> list = postRepository.searchAllParticipantThatCanParticipant(dep,searchString,pageable).getContent();
@@ -408,7 +408,7 @@ public class AppointmentService {
         return heads;
     }
 
-    public List<AppointmentHeadDTO> searchByTag(Integer userIdx, String tag, Pageable pageable) throws BaseException{
+    public List<AppointmentHeadDTO> searchByTag(Long userIdx, String tag, Pageable pageable) throws BaseException{
         //1. tag의 존재 여부
         boolean isExist = postTagRepository.existsByTagContent(tag);
         if(!isExist) throw new BaseException(BaseResponseStatus.TAG_DOES_NOT_EXIST);
@@ -452,7 +452,7 @@ public class AppointmentService {
         return heads;
     }
 
-    public PostViewDTO getPostData(Integer roomIdx,Integer userIdx) throws BaseException{
+    public PostViewDTO getPostData(Long roomIdx,Long userIdx) throws BaseException{
         //해당 post의 데이터 싸그리 가져오기
         Post post = postRepository.findPostByPostIdx(roomIdx);
 

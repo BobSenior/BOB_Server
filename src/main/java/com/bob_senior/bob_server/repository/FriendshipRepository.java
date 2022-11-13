@@ -8,8 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
-public interface FriendshipRepository extends JpaRepository<Friendship, Integer> {
+public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
 
     boolean existsByFriendInfoAndAndStatus(FriendId id, String status);
 
@@ -18,8 +19,9 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Integer>
     Friendship getTopByFriendInfoAndStatus(FriendId id, String status);
 
     @Query(value = "select F from Friendship F where F.status = 'WAITING' and (F.friendInfo.maxUserIdx = :userIdx or F.friendInfo.minUserIdx = :userIdx) ")
-    Page<Friendship> findAllByUserIdxInWaiting(@Param("userIdx") Integer userIdx, Pageable pageable);
+    Page<Friendship> findAllByUserIdxInWaiting(@Param("userIdx") Long userIdx, Pageable pageable);
 
+    @Transactional
     @Modifying
     @Query(value = "update Friendship f set f.status = 'ACTIVE' where f.friendInfo = :id")
     void updateFriendShipACTIVE(FriendId id);

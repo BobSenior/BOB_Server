@@ -17,9 +17,9 @@ import java.io.Serializable;
 public class PostUser implements Serializable {
 
     @Column(name = "postIdx")
-    private Integer postIdx;
+    private Long postIdx;
 
     @Column(name = "userIdx")
-    private Integer userIdx;
+    private Long userIdx;
 
 }

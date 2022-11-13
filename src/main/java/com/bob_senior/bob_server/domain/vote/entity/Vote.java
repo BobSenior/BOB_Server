@@ -15,13 +15,13 @@ public class Vote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer voteIdx;
+    private Long voteIdx;
 
     @Column
-    private Integer postIdx;
+    private Long postIdx;
 
     @Column
-    private Integer creatorIdx;
+    private Long creatorIdx;
 
     @Column
     private String title;

@@ -9,5 +9,5 @@ public class SessionAndClientRecord {
 
     private String sessionId;
 
-    private Integer userIdx;
+    private Long userIdx;
 }

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class UserInviteDTO {
 
-    private Integer inviterIdx;
+    private Long inviterIdx;
 
     private String invitedUUID;
 }

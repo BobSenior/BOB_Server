@@ -15,10 +15,10 @@ public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer messageIdx;
+    private Long messageIdx;
 
     @Column
-    private Integer senderIdx;
+    private Long senderIdx;
 
     @Column
     private Timestamp sentAt;

@@ -8,26 +8,28 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-public interface PostParticipantRepository extends JpaRepository<PostParticipant, Integer> {
+public interface PostParticipantRepository extends JpaRepository<PostParticipant, Long> {
 
-    List<PostParticipant> findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(Integer postIdx, String status,String position);
+    List<PostParticipant> findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(Long postIdx, String status,String position);
 
     boolean existsByPostUser(PostUser id);
 
-    Long countByPostUser_PostIdxAndStatus(int postIdx, String status);
+    Long countByPostUser_PostIdxAndStatus(Long postIdx, String status);
 
-    Page<PostParticipant> findAllByPostUser_PostIdxAndStatus(Integer postIdx, String Status, Pageable pageable);
+    Page<PostParticipant> findAllByPostUser_PostIdxAndStatus(Long postIdx, String Status, Pageable pageable);
 
+    @Transactional
     @Modifying
     @Query(value = "update PostParticipant p set p.status = :status where p.postUser.postIdx =:postIdx and p.postUser.userIdx = :userIdx")
-    void changePostParticipationStatus(@Param("status") String status, @Param("postIdx") Integer postIdx, @Param("userIdx") Integer userIdx);
+    void changePostParticipationStatus(@Param("status") String status, @Param("postIdx") Long postIdx, @Param("userIdx") Long userIdx);
 
     boolean existsByPostUserAndAndStatus(PostUser id, String status);
 
-    Page<PostParticipant> findAllByPostUser_UserIdxAndStatus(Integer userIdx, String Status, Pageable pageable);
+    Page<PostParticipant> findAllByPostUser_UserIdxAndStatus(Long userIdx, String Status, Pageable pageable);
 
 
 }

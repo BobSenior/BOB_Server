@@ -16,7 +16,7 @@ public class ChatParticipant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer chatParticipantIdx;
+    private Long chatParticipantIdx;
 
     @Embedded
     private ChatNUser chatNUser;

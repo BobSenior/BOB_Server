@@ -2,18 +2,20 @@ package com.bob_senior.bob_server.domain.user.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.TypeAlias;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
-@Entity
+@Entity(name="User")
 @Getter
 @Setter
+@Table(name = "User")
 public class User {
 
     @Id
     @Column(name = "userIdx")
-    private Integer userIdx;
+    private Long userIdx;
 
     @Column(name = "usrId")
     private String usrId;

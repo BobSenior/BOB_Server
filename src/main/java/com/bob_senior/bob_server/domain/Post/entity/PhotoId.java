@@ -17,7 +17,7 @@ import java.io.Serializable;
 public class PhotoId implements Serializable {
 
     @Column(name = "postIdx")
-    private Integer postIdx;
+    private Long postIdx;
 
     @Column(name = "postPhotoUrl")
     private String postPhotoUrl;

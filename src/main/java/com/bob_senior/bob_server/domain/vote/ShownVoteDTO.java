@@ -13,9 +13,9 @@ import java.util.List;
 @Builder
 public class ShownVoteDTO {
 
-    private Integer voteIdx;
+    private Long voteIdx;
 
-    private Integer writerIdx;
+    private Long writerIdx;
 
     private String nickname;
 

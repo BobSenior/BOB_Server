@@ -7,8 +7,8 @@ import lombok.Setter;
 @Setter
 public class AppointmentParticipantReqDTO {
 
-    private int userIdx;
+    private Long userIdx;
 
-    private int postIdx;
+    private Long postIdx;
 
 }

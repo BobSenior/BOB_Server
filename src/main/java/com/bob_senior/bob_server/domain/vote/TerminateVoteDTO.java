@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class TerminateVoteDTO {
 
-    private Integer terminatorIdx;
-    private Integer voteIdx;
+    private Long terminatorIdx;
+    private Long voteIdx;
 
 }

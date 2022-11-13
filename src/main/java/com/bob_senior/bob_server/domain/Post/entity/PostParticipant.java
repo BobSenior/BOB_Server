@@ -14,7 +14,7 @@ public class PostParticipant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer postParticipantIdx;
+    private Long postParticipantIdx;
 
     @Embedded
     private PostUser postUser;

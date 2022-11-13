@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface PostTagRepository extends JpaRepository<PostTag,Integer> {
+public interface PostTagRepository extends JpaRepository<PostTag,Long> {
 
     @Query(
             value = "select t " +
@@ -23,7 +23,7 @@ public interface PostTagRepository extends JpaRepository<PostTag,Integer> {
 
     boolean existsByTagContent(String tagContent);
 
-    List<PostTag> findAllByPost_PostIdx(Integer postIdx);
+    List<PostTag> findAllByPost_PostIdx(Long postIdx);
 
 
 }

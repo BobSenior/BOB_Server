@@ -47,18 +47,18 @@ public class VoteService {
 
 
 
-    public boolean checkIfVoteIsValid(int roomIdx, int voteIdx){
+    public boolean checkIfVoteIsValid(Long roomIdx, Long voteIdx){
         return voteRepository.existsByVoteIdxAndPostIdx(voteIdx,roomIdx);
     }
 
-    public boolean hasActivatedVoteInRoom(int postIdx){
+    public boolean hasActivatedVoteInRoom(Long postIdx){
         return voteRepository.existsVoteByPostIdxAndIsActivated(postIdx,1);
     }
 
 
 
 
-    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(int postIdx, int userIdx, Pageable pageable) throws BaseException{
+    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(Long postIdx, Long userIdx, Pageable pageable) throws BaseException{
         //1. 현재 postIdx에 걸린 activated vote를 전부 가져오기
         List<Vote> lists = voteRepository.findAllByIsActivatedAndPostIdx("ACTIVATED",postIdx,pageable).getContent();
 
@@ -79,7 +79,7 @@ public class VoteService {
     }
 
 
-    public ShownVoteDTO getVoteByVoteIdx(int voteIdx) throws BaseException{
+    public ShownVoteDTO getVoteByVoteIdx(Long voteIdx) throws BaseException{
         Vote vote = voteRepository.findVoteByVoteIdx(voteIdx);
         List<VoteRecord> records = voteRecordRepository.findAllByVoteId_VoteIdx(voteIdx);
         return ShownVoteDTO.builder()
@@ -144,7 +144,7 @@ public class VoteService {
 
 
     @Transactional
-    public ShownVoteDTO makeNewVote(MakeVoteDTO makeVoteDTO, LocalDateTime ldt, Integer roomIdx) throws BaseException{
+    public ShownVoteDTO makeNewVote(MakeVoteDTO makeVoteDTO, LocalDateTime ldt, Long roomIdx) throws BaseException{
 
         //0 . 이미 존재하는 vote인지 한번 검사 - votename & timestamp로 검사하면 될듯?
         if(voteRepository.existsVoteByTitleAndIsActivated(makeVoteDTO.getTitle(), ldt)){
@@ -198,7 +198,7 @@ public class VoteService {
     }
 
     @Transactional
-    public void makeTerminateVote(int roomId, TerminateVoteDTO terminateVoteDTO) throws BaseException {
+    public void makeTerminateVote(Long roomId, TerminateVoteDTO terminateVoteDTO) throws BaseException {
         //1. 해당 vote의 maker인지 확인
         boolean is_owner = voteRepository.existsVoteByVoteIdxAndCreatorIdx(terminateVoteDTO.getVoteIdx(), terminateVoteDTO.getTerminatorIdx());
         if(!is_owner){
@@ -215,7 +215,7 @@ public class VoteService {
         handleVoteResultByType(vote.getVoteType(),vr,vote.getPostIdx());
     }
 
-    private void handleVoteResultByType(String voteType, VoteRecord vr,Integer postIdx) throws BaseException{
+    private void handleVoteResultByType(String voteType, VoteRecord vr,Long postIdx) throws BaseException{
         //투표의 결과를 바로 반영 -> problem : 투표가 동률나오면?
         //TODO : 투표 타입에 따라 appointment의 정보를 가공
         String result = vr.getVoteContent();

@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public class DetermineFriendshipDTO {
-    private Integer userIdx;
+    private Long userIdx;
 
-    private Integer targetIdx;
+    private Long targetIdx;
 
     private boolean accept;
 }
