@@ -4,6 +4,7 @@ import com.bob_senior.bob_server.domain.user.SimplifiedUserProfileDTO;
 import com.bob_senior.bob_server.domain.user.UserProfile;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,7 +16,9 @@ public class AppointmentHeadDTO {
 
     private String title;
 
-    private String imageUrl;
+    private Timestamp writtenAt;
+
+    private String imageURL;
 
     private SimplifiedUserProfileDTO writer;
 
@@ -26,5 +29,11 @@ public class AppointmentHeadDTO {
     private String type;
 
     private String status;
+
+    private Integer totalNum;
+
+    private Long currNum;
+
+    private Long waitingNum;
 
 }

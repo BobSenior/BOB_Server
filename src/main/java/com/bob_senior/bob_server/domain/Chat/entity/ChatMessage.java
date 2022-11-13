@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.Chat;
+package com.bob_senior.bob_server.domain.Chat.entity;
 
 import lombok.*;
 
@@ -18,9 +18,6 @@ public class ChatMessage {
     private Integer messageIdx;
 
     @Column
-    private Integer chatRoomIdx;
-
-    @Column
     private Integer senderIdx;
 
     @Column
@@ -31,6 +28,10 @@ public class ChatMessage {
 
     @Column
     private String uuId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chatRoomIdx")
+    private ChatRoom chatRoom;
 
 
 }

@@ -1,7 +1,8 @@
-package com.bob_senior.bob_server.domain.Chat;
+package com.bob_senior.bob_server.domain.Chat.entity;
 
 import lombok.*;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
 
@@ -12,7 +13,9 @@ import java.io.Serializable;
 @Setter
 public class ChatNUser implements Serializable {
 
+    @Column(name = "chatRoomIdx")
     private Integer chatRoomIdx;
-    private Integer chatParticipantIdx;
+    @Column(name = "userIdx")
+    private Integer userIdx;
 
 }

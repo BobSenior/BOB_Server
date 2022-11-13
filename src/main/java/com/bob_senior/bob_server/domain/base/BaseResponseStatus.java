@@ -22,7 +22,13 @@ public enum BaseResponseStatus {
     NON_EXIST_POSTIDX(false,2009,"존재하지 않는 게시글입니다"),
     UNABLE_TO_MAKE_REQUEST_IN_POST(false,2010,"더이상 해당 글에 참여할 수 없습니다"),
     INVALID_ACCESS_TO_APPOINTMENT(false,2011,"해당 약속에 대한 권한이 없습니다"),
-    NON_EXIST_POST_PARTICIPATION(false, 2012,"존재하지 않는 참가요청입니다");
+    NON_EXIST_POST_PARTICIPATION(false, 2012,"존재하지 않는 참가요청입니다"),
+    UNABLE_TO_PARTICIPATE_IN_POST(false, 2013, "게시글에 더이상 참여할 수 없습니다"),
+    CAN_NOT_REQUEST_FRIENDSHIP(false,2014,"해당 유저에게 친구요청을 보낼 수 없습니다"),
+    ALREADY_HAS_FRIENDSHIP(false, 2015, "이미 친구인 유저입니다"),
+    INVALID_USER_TO_ACCEPT(false,2016,"존재하지 않는 친구요청입니다"),
+    TAG_DOES_NOT_EXIST(false, 2017, "존재하지 않는 태그입니다"),
+    ALREADY_BLOCKED_USER(false,2018,"이미 차단된 유저입니다");
 
 
     private final boolean isSuccess;

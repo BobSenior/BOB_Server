@@ -3,7 +3,7 @@ package com.bob_senior.bob_server.controller;
 import com.bob_senior.bob_server.domain.Chat.ChatDto;
 import com.bob_senior.bob_server.domain.Chat.ChatPage;
 import com.bob_senior.bob_server.domain.Chat.SessionAndClientRecord;
-import com.bob_senior.bob_server.domain.Chat.SessionRecord;
+import com.bob_senior.bob_server.domain.Chat.entity.SessionRecord;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.repository.SessionRecordRepository;
@@ -43,6 +43,9 @@ public class ChatController {
         this.sessionRecordRepository = sessionRecordRepository;
     }
 
+
+
+
     //채팅방에 참여
     @MessageMapping("/stomp/init/{roomId}")
     @SendTo("/topic/room/{roomId}")
@@ -61,6 +64,9 @@ public class ChatController {
         msg.setData(nickname + " 님이 입장하셨습니다!");
         return new BaseResponse<ChatDto>(msg);
     }
+
+
+
 
     //채팅보내기
     @MessageMapping("/stomp/{roomId}")
@@ -84,6 +90,9 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+
+
+
     //채팅방 나가기
     @MessageMapping("/stomp/exit/{roomId}")
     @SendTo("/topic/room/{roomId}")
@@ -104,14 +113,22 @@ public class ChatController {
         return new BaseResponse<ChatDto>(msg);
     }
 
+
+
+
+    //첫 연결시 거치는 api
     @MessageMapping("/stomp/record/{roomId}")
     public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable int roomId, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
+        chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomId);
         sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomId));
         return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
-    //1. 채팅을 페이지 단위로 받아오기
+
+
+
+    // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
     public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable int roomId, final Pageable pageable){
         //pageable = requestParam으로 받음
@@ -132,7 +149,11 @@ public class ChatController {
         return new BaseResponse<>(chats);
     }
 
+
+
+
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
+    //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
     public BaseResponse getUnreadChatNum(@PathVariable int roomId, int userIdx){
         //해당 유저가 valid한지 먼저 확인
@@ -146,7 +167,13 @@ public class ChatController {
             return new BaseResponse(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
+        //return new BaseResponse(chatService.getTotalNumberOfUnreadChatByUserIdx(userIdx));
     }
+
+
+
+
+
 
     //test method
     @GetMapping("test")

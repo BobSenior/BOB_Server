@@ -1,5 +1,6 @@
 package com.bob_senior.bob_server.domain.vote;
 
+import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import lombok.*;
 
 import java.time.LocalDateTime;

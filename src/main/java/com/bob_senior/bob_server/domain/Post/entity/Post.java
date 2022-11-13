@@ -1,7 +1,8 @@
-package com.bob_senior.bob_server.domain.Post;
+package com.bob_senior.bob_server.domain.Post.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity(name = "Post")
+@DynamicInsert
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,11 +42,14 @@ public class Post {
     private LocalDateTime meetingDate;
 
     @Column
-    private String imageURL;
-
-    @Column
     private String meetingType;
 
     @Column
     private Integer participantLimit;
+
+    @Column
+    private String participantConstraint;
+
+    @Column
+    private Integer chatRoomIdx;
 }

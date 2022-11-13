@@ -1,5 +1,6 @@
-package com.bob_senior.bob_server.domain.vote;
+package com.bob_senior.bob_server.domain.vote.entity;
 
+import com.bob_senior.bob_server.domain.vote.entity.VoteId;
 import lombok.*;
 
 import javax.persistence.*;
@@ -12,7 +13,11 @@ import javax.persistence.*;
 @Builder
 public class VoteRecord {
 
-    @EmbeddedId
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer voteRecordIdx;
+
+    @Embedded
     private VoteId voteId;
 
     @Column
@@ -20,8 +25,5 @@ public class VoteRecord {
 
     @Column
     private Integer count;
-
-    //참여한 user에 대한 정보를 어디서 보관해야되나....
-
 
 }

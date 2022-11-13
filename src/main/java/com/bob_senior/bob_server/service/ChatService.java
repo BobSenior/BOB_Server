@@ -1,9 +1,14 @@
 package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.Chat.*;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatMessage;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
+import com.bob_senior.bob_server.domain.Chat.entity.ChatParticipant;
 import com.bob_senior.bob_server.domain.base.BaseException;
+import com.bob_senior.bob_server.repository.ChatMessageRepository;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
 import com.bob_senior.bob_server.repository.ChatRepository;
+import com.bob_senior.bob_server.repository.ChatRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,16 +26,20 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final ChatParticipantRepository chatParticipantRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Autowired
-    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository){
+    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository){
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRepository = chatRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
     //채팅 페이지 가져오기
     public ChatPage loadChatPageData(Pageable pageable, int roomIdx) throws BaseException {
-        Page<ChatMessage> pages =  chatRepository.findByChatRoomIdx(roomIdx,pageable);
+        Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdx(roomIdx,pageable);
         List<ChatDto> chats = new ArrayList<>();
         for (ChatMessage page : pages) {
             Integer sender = page.getSenderIdx();
@@ -51,13 +60,13 @@ public class ChatService {
 
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Integer chatIdx, Integer userIdx){
-        boolean prev = chatParticipantRepository.existsChatParticipantById_ChatParticipantIdxAndId_ChatRoomIdx(chatIdx,userIdx);
+        boolean prev = chatParticipantRepository.existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getChatParticipantById_ChatParticipantIdxAndAndId_ChatRoomIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
         if(cp.getStatus().equals("Q")) return false;
         return true;
 
@@ -65,6 +74,7 @@ public class ChatService {
 
     //해당 유저의 lastRead기준으로 읽지 않은 개수 가져오기
     public Long getNumberOfUnreadChatByUserIdx(Integer userIdx,Integer roomIdx){
+
         Timestamp ts = chatParticipantRepository.getLastReadByUserIdx(userIdx);
         if(ts == null){
             //null일시 새로 데이터를 세팅해주고 0개 return
@@ -74,6 +84,19 @@ public class ChatService {
         return chatRepository.countBySentAtAfter(lastRead);
     }
 
+    //모든 채팅의 읽지 않은 개수를 가져오기
+    public Long getTotalNumberOfUnreadChatByUserIdx(Integer userIdx){
+        //1. chatParticipant에서 Q상태인 tuple의 timeStamp를 모두 가져오기
+        List<ChatParticipant> participants = chatParticipantRepository.getTotalUnreadChatNumber(userIdx);
+        //각각의 chatParticipant의 timeStamp와 chatIdx로 안읽은 채팅 개수 가져오기
+        Long total = 0L;
+        for (ChatParticipant participant : participants) {
+            int chatRoomIdx = participant.getChatNUser().getChatRoomIdx();
+            total += chatMessageRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtAfter(chatRoomIdx,participant.getLastRead());
+        }
+        return total;
+    }
+
     //해당 유저를 해당 채팅방에 참여시키기
     //필요한 데이터 : chatRoomIdx, chatParticipantIdx, status, lastRead
     public Timestamp userParticipant(Integer chatRoomIdx, Integer chatParticipantIdx){
@@ -81,7 +104,7 @@ public class ChatService {
         Long datetime = System.currentTimeMillis();
         Timestamp timestamp = new Timestamp(datetime);
         ChatParticipant cp = ChatParticipant.builder()
-                .id(rau)
+                .chatNUser(rau)
                 .status("A")
                 .lastRead(timestamp)
                 .build();
@@ -93,7 +116,7 @@ public class ChatService {
     public void  storeNewMessage(ChatDto msg,Timestamp ts,Integer roomIdx) {
         String chatId = UUID.randomUUID().toString();
         ChatMessage cmg = ChatMessage.builder()
-                .chatRoomIdx(roomIdx)
+                .chatRoom(chatRoomRepository.getReferenceById(roomIdx))
                 .senderIdx(msg.getSenderIdx())
                 .sentAt(ts)
                 .msgContent(msg.getData())
@@ -105,8 +128,12 @@ public class ChatService {
     //user가 방 밖으로 나갈시 disable시키기
     public void deleteUserFromRoom(int roomId, Integer sender) {
         ChatNUser rau = new ChatNUser(roomId,sender);
-        ChatParticipant cp = chatParticipantRepository.findChatParticipantById(rau);
+        ChatParticipant cp = chatParticipantRepository.findChatParticipantByChatNUser(rau);
         cp.setStatus("Q");
         chatParticipantRepository.save(cp);
+    }
+
+    public void activateChatParticipation(Integer userIdx, int roomId) {
+        chatParticipantRepository.activateParticipation(userIdx,roomId);
     }
 }

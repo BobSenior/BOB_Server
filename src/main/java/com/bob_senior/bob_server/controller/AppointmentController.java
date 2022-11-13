@@ -1,7 +1,10 @@
 package com.bob_senior.bob_server.controller;
 
+import com.bob_senior.bob_server.domain.Post.entity.PostViewDTO;
+import com.bob_senior.bob_server.domain.appointment.AppointmentHeadDTO;
 import com.bob_senior.bob_server.domain.appointment.AppointmentParticipantReqDTO;
 import com.bob_senior.bob_server.domain.appointment.HandleRequestDTO;
+import com.bob_senior.bob_server.domain.appointment.UserInviteDTO;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
@@ -13,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @Slf4j
@@ -31,8 +36,25 @@ public class AppointmentController {
         this.appointmentService = appointmentService;
     }
 
+
+
+
+    //내가 참여할 수 있는 appointment들을 가져오기
+    @GetMapping("/appointment/list")
+    public BaseResponse getReachableAppointmentPage(Pageable pageable,@RequestBody Integer userIdx){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        List<AppointmentHeadDTO> getter = appointmentService.getAvailableAppointmentList(userIdx,pageable);
+        return new BaseResponse(getter);
+    }
+
+
+
+
+    //해당 약속 홈화면 정보 가져오기
     @GetMapping("/appointment/{roomIdx}")
-    public BaseResponse getAppointmentHomeView(@PathVariable Integer roomIdx, Integer userIdx){
+    public BaseResponse getAppointmentHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -46,7 +68,27 @@ public class AppointmentController {
         }
     }
 
-    //현재 대기중인 head들 가져오기
+    //post의 홈화면 가져오기
+    @GetMapping("/post/{roomIdx}")
+    public BaseResponse getPostHomeView(@PathVariable Integer roomIdx,@RequestParam Integer userIdx ){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        if(!appointmentService.isPostExist(roomIdx)){
+            return new BaseResponse(BaseResponseStatus.NON_EXIST_POSTIDX);
+        }
+        try{
+            PostViewDTO data = appointmentService.getPostData(roomIdx,userIdx);
+            return new BaseResponse(data);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+
+
+
+    //현재 신청 대기중인 게시글 head(page)
     @GetMapping("/appointment/waiting")
     public BaseResponse getMyWaitingParticipantList(@RequestParam Integer userIdx,
                                                     Pageable pageable){
@@ -61,6 +103,9 @@ public class AppointmentController {
              return new BaseResponse(e.getStatus());
          }
     }
+
+
+
 
     //현재 참여중인 post의 head들을 가져오기
     @GetMapping("/appointment/ongoing")
@@ -77,6 +122,9 @@ public class AppointmentController {
         }
     }
 
+
+
+
     //참가요청하기
     @PostMapping("/appointment/request")
     public BaseResponse makeParticipantRequest(@RequestBody AppointmentParticipantReqDTO appointmentParticipantReqDTO){
@@ -87,6 +135,9 @@ public class AppointmentController {
         }
         return new BaseResponse("passed");
     }
+
+
+
 
     //현 post에 걸린 참가요청 리스트 받아오기
     @GetMapping("/appointment/waiting/{postIdx}")
@@ -107,6 +158,10 @@ public class AppointmentController {
         // 모든 검증 통과시 리스트 가져오기
         return new BaseResponse(appointmentService.getAllRequestInPost(postIdx,pageable));
     }
+
+
+
+
 
     //해당 참가 요청 거절 or 수락 -> 이건 그냥 boolean 값을 받으면 될듯
     @PostMapping("/appointment/determine/{postIdx}")
@@ -132,5 +187,62 @@ public class AppointmentController {
         }
     }
 
+
+
+
+
+    //초대기능 -> 무조건 방장만 할 수 있게
+    @PostMapping("/appointment/invite/{postIdx}")
+    public BaseResponse inviteUserIntoPostByUUID(@PathVariable Integer postIdx, @RequestBody UserInviteDTO inviteDTO){
+        if(!(userService.checkUserExist(inviteDTO.getInviterIdx()))){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        //2. 유효한 postIdx인지
+        if(!appointmentService.isPostExist(postIdx)){
+            return new BaseResponse(BaseResponseStatus.NON_EXIST_POSTIDX);
+        }
+        //3. 일단은 방의 주인만 초대할 수 있도록 설정 -> 채팅으로 uuid넘겨주게 해야될듯
+        if(!appointmentService.isOwnerOfPost(inviteDTO.getInviterIdx(), postIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_ACCESS_TO_APPOINTMENT);
+        }
+        try{
+            appointmentService.inviteUserByUUID(inviteDTO.getInvitedUUID(),postIdx);
+            return new BaseResponse(BaseResponseStatus.SUCCESS);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+
+
+
+
+    //주어진 검색어로 title기반 search
+    @GetMapping("/appointment/search")
+    public BaseResponse getPostSearchResult(@RequestParam Integer userIdx, @RequestParam String searchString,Pageable pageable){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+            List<AppointmentHeadDTO> heads = appointmentService.searchByStringInTitle(userIdx,searchString,pageable);
+            return new BaseResponse(heads);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+    //tag를 통한 search -> multi-tag?
+    @GetMapping("/appointment/search/tags")
+    public BaseResponse getPostSearchResultByTags(@RequestParam Integer userIdx,@RequestParam String tag,Pageable pageable ){
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+            List<AppointmentHeadDTO> heads = appointmentService.searchByTag(userIdx,tag,pageable);
+            return new BaseResponse(heads);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
 
 }
