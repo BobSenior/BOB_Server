@@ -28,15 +28,17 @@ public class AppointmentService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final PostPhotoRepository postPhotoRepository;
     private final PostTagRepository postTagRepository;
+    private final ChatRoomRepository chatRoomRepository;
 
     @Autowired
-    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository, PostTagRepository postTagRepository) {
+    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository, PostTagRepository postTagRepository, ChatRoomRepository chatRoomRepository) {
         this.postRepository = postRepository;
         this.postParticipantRepository = postParticipantRepository;
         this.userRepository = userRepository;
         this.chatParticipantRepository = chatParticipantRepository;
         this.postPhotoRepository = postPhotoRepository;
         this.postTagRepository = postTagRepository;
+        this.chatRoomRepository = chatRoomRepository;
     }
 
 
@@ -57,9 +59,8 @@ public class AppointmentService {
                             .nickname(user.getNickName())
                             .schoolId(user.getSchoolId())
                             .isOnline(false)
-                            .profileImgURL("hello")
+                            .profileImgURL(user.getImageURL())
                             .build()
-                    //TODO : isOnlien이나 profileImg등을 어찌할까..
             );
         }
         for (PostParticipant participant : receiver_prev) {
@@ -69,7 +70,7 @@ public class AppointmentService {
                             .nickname(user.getNickName())
                             .schoolId(user.getSchoolId())
                             .isOnline(false)
-                            .profileImgURL("hellp")
+                            .profileImgURL(user.getImageURL())
                             .build()
             );
         }
@@ -504,6 +505,43 @@ public class AppointmentService {
                 .tagHead(heads)
                 .isRequested(isRequested)
                 .build();
+    }
+
+    public boolean checkIfUserParticipating(long postIdx, long userIdx) {
+        return postParticipantRepository.existsByPostUser(new PostUser(postIdx,userIdx));
+    }
+
+    public void exitAppointment(long postIdx, long userIdx) throws BaseException {
+        //해당 post에서 나가기
+        //1. 일단 postParticipant에서 제거
+        postParticipantRepository.deleteByPostUser(new PostUser(postIdx, userIdx));
+        Post post = postRepository.findPostByPostIdx(postIdx);
+        Long chatRoomIdx = post.getChatRoomIdx();
+        chatParticipantRepository.deleteByChatNUser(new ChatNUser(chatRoomIdx,userIdx));
+
+        //2. 해당 user의 이탈로 만약 더이상 참여 인원이 없을시 -> post와 chatroom을 제거
+        long remains = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active");
+        if(remains == 0){
+            //제거
+            chatRoomRepository.deleteById(chatRoomIdx);
+            postRepository.deleteById(postIdx);
+        }
+        //3. 해당 유저가 post의 주인일 경우? 아무 buyer에게 owner권한을 넘기자
+        //만약 buyer가 없다면?.... 방을 터트리는게 맞지 않을까
+
+        long remains_buyer = postParticipantRepository.countByPostUser_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
+        if(remains_buyer == 0){
+            //TODO : buyer가 전부 나간 상황에서 어찌처리할지 결정 해야함 1) 그냥 방 폭파 2) 아무 receiver에게 위임
+            chatRoomRepository.deleteById(chatRoomIdx);
+            postRepository.deleteById(postIdx);
+        }
+
+
+        if(userIdx == post.getWriterIdx()){
+            List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(postIdx,"PARTICIPATE","BUYER");
+            post.setWriterIdx(buyer_prev.get(0).getPostUser().getUserIdx());
+            postRepository.save(post);
+        }
     }
 }
 

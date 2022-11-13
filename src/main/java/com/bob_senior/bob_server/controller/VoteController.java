@@ -1,8 +1,10 @@
 package com.bob_senior.bob_server.controller;
 
+import com.bob_senior.bob_server.domain.appointment.UserInviteDTO;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
+import com.bob_senior.bob_server.domain.user.UserIdxDTO;
 import com.bob_senior.bob_server.domain.vote.*;
 import com.bob_senior.bob_server.service.AppointmentService;
 import com.bob_senior.bob_server.service.ChatService;
@@ -44,8 +46,8 @@ public class VoteController {
 
 
     //현재 채팅방에 activated의 vote리스트 가져오기
-    @GetMapping("/appointment/vote/list/{roomIdx}")
-    public BaseResponse getCurrentActivatingVoteList(@PathVariable Long roomIdx, @RequestBody Long userIdx, Pageable pageable){
+    @GetMapping("/appointment/vote/list")
+    public BaseResponse getCurrentActivatingVoteList(@RequestParam Long roomIdx, @RequestParam Long userIdx, Pageable pageable){
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
             return new BaseResponse(BaseResponseStatus.NO_VOTE_IN_CHATROOM);
         }
@@ -63,8 +65,8 @@ public class VoteController {
 
 
     //특정vote데이터 가져오기
-    @GetMapping("/appointment/vote/{roomIdx}/{voteIdx}")
-    public BaseResponse getSpecificVoteData(@PathVariable Long roomIdx,@PathVariable Long voteIdx){
+    @GetMapping("/appointment/vote")
+    public BaseResponse getSpecificVoteData(@RequestParam Long roomIdx,@RequestParam Long voteIdx){
         //1. 해당 vote가 유효한지 검사
         if(!voteService.checkIfVoteIsValid(roomIdx, voteIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_VOTE_ACCESS);

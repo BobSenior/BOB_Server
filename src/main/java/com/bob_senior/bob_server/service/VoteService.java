@@ -1,5 +1,6 @@
 package com.bob_senior.bob_server.service;
 
+import com.bob_senior.bob_server.domain.Post.entity.Post;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.vote.*;
@@ -30,12 +31,13 @@ public class VoteService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostParticipantRepository postParticipantRepository;
 
 
 
 
     @Autowired
-    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository, UserRepository userRepository) {
+    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository, UserRepository userRepository, PostParticipantRepository postParticipantRepository) {
         this.voteRepository = voteRepository;
         this.voteParticipatedRepository = voteParticipatedRepository;
         this.voteRecordRepository = voteRecordRepository;
@@ -43,6 +45,7 @@ public class VoteService {
         this.chatParticipantRepository = chatParticipantRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.postParticipantRepository = postParticipantRepository;
     }
 
 
@@ -130,8 +133,6 @@ public class VoteService {
         );
         //4. 현재까지의 voteResult를 모두에게 spread
 
-        System.out.println("userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName() = " + userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName());
-
         return ShownVoteDTO.builder()
                 .voteIdx(vote.getVoteIdx())
                 .writerIdx(vote.getCreatorIdx())
@@ -174,7 +175,6 @@ public class VoteService {
         //voteIdx는 db에 의한 자동생성... 일단 생성한 뒤에 가져오는게 best->concurrency problem..?
 
         Vote vote = voteRepository.findVoteByUUID(uuid);
-        System.out.println("userRepository.findUserByUserIdx(vote.getCreatorIdx()) = " + userRepository.findUserByUserIdx(vote.getCreatorIdx()));
         //db에 의해 생성된 voteIdx가져오기
 
         int select_count = 1;
@@ -232,6 +232,9 @@ public class VoteService {
                 //약속 시간 변경
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
                 LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(vr.getVoteContent()));
+                LocalDateTime now = LocalDateTime.now();
+                //현 시점보다 이전으로 설정하려먼 에러 발생
+                if(localDateTime.isBefore(now)) throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
                 Timestamp ts = Timestamp.valueOf(localDateTime);
                 postRepository.applyVoteResultDate(ts,postIdx);
             }
@@ -244,6 +247,15 @@ public class VoteService {
                 String state = "active";
                 if(result.equals("YES")) state = "FINISH";
                 postRepository.applyVoteResultRecruitment(state,postIdx);
+            }
+            case "BREAK" : {
+                //해당 게시글 폭파
+                //chatParticipant를 모두 제거, postParticipant도 모두 제거 , Post제거, Chatroom제거
+                Post post = postRepository.findPostByPostIdx(postIdx);
+                chatParticipantRepository.deleteAllParticipationInChatroom(post.getChatRoomIdx());
+                postParticipantRepository.deleteAllParticipantInPost(postIdx);
+                chatRepository.deleteById(post.getChatRoomIdx());
+                postRepository.delete(post);
             }
         }
     }

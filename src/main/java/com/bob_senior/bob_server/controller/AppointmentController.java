@@ -72,7 +72,8 @@ public class AppointmentController {
 
     //post의 홈화면 가져오기
     @GetMapping("/post/{roomIdx}")
-    public BaseResponse getPostHomeView(@PathVariable Long roomIdx,@RequestParam Long userIdx ){
+    public BaseResponse getPostHomeView(@PathVariable Long roomIdx,@RequestBody UserIdxDTO userIdxDTO ){
+        Long userIdx = userIdxDTO.getUserIdx();
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -110,8 +111,8 @@ public class AppointmentController {
 
 
     //현재 참여중인 post의 head들을 가져오기
-    @GetMapping("/appointment/ongoing")
-    public BaseResponse getMyParticipatedAppointmentList(@RequestParam Long userIdx,
+    @GetMapping("/appointment/ongoing/{userIdx}")
+    public BaseResponse getMyParticipatedAppointmentList(@PathVariable Long userIdx,
                                                          Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
@@ -244,6 +245,23 @@ public class AppointmentController {
         try{
             List<AppointmentHeadDTO> heads = appointmentService.searchByTag(userIdx,tag,pageable);
             return new BaseResponse(heads);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+    @PostMapping("/appointment/leave/{postIdx}")
+    public BaseResponse leaveAppointmentParticipant(@PathVariable long postIdx, @RequestBody UserIdxDTO userIdxDTO){
+        long userIdx = userIdxDTO.getUserIdx();
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        if(!appointmentService.checkIfUserParticipating(postIdx, userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_ACCESS_TO_APPOINTMENT);
+        }
+        try{
+            appointmentService.exitAppointment(postIdx,userIdx);
+            return new BaseResponse(BaseResponseStatus.SUCCESS);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }

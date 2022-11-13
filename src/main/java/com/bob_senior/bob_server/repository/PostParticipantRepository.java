@@ -32,4 +32,14 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
     Page<PostParticipant> findAllByPostUser_UserIdxAndStatus(Long userIdx, String Status, Pageable pageable);
 
 
+    @Transactional
+    void deleteByPostUser(PostUser postUser);
+
+
+    @Transactional
+    @Modifying
+    @Query(value = "delete from PostParticipant p where p.postUser.postIdx = :postIdx")
+    void deleteAllParticipantInPost(Long postIdx);
+
+    Long countByPostUser_PostIdxAndStatusAndPosition(Long postIdx, String status, String position);
 }

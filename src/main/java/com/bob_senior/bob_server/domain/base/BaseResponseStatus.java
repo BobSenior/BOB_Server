@@ -28,7 +28,8 @@ public enum BaseResponseStatus {
     ALREADY_HAS_FRIENDSHIP(false, 2015, "이미 친구인 유저입니다"),
     INVALID_USER_TO_ACCEPT(false,2016,"존재하지 않는 친구요청입니다"),
     TAG_DOES_NOT_EXIST(false, 2017, "존재하지 않는 태그입니다"),
-    ALREADY_BLOCKED_USER(false,2018,"이미 차단된 유저입니다");
+    ALREADY_BLOCKED_USER(false,2018,"이미 차단된 유저입니다"),
+    DATE_TIME_ERROR(false, 2019,"날짜 선택이 잘못되었습니다");
 
 
     private final boolean isSuccess;

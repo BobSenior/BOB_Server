@@ -38,4 +38,12 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
 
     @Query(value = "select cp from ChatParticipant cp where cp.status = 'Q' and cp.chatNUser.userIdx = :userIdx")
     List<ChatParticipant> getTotalUnreadChatNumber(@Param("userIdx") Long userIdx);
+
+    @Transactional
+    void deleteByChatNUser(ChatNUser chatNUser);
+
+    @Transactional
+    @Modifying
+    @Query(value = "delete from ChatParticipant cp where cp.chatNUser.chatRoomIdx = :roomIdx")
+    void deleteAllParticipationInChatroom(@Param("roomIdx") Long roomIdx);
 }
