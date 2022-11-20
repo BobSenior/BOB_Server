@@ -11,4 +11,6 @@ public class AppointmentParticipantReqDTO {
 
     private Long postIdx;
 
+    private String position;
+
 }

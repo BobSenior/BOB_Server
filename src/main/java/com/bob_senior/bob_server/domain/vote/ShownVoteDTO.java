@@ -25,6 +25,6 @@ public class ShownVoteDTO {
 
     private Integer totalParticipated;
 
-    private List<VoteRecord> records;
+    private List<ShownVoteRecord> records;
 
 }

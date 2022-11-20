@@ -15,7 +15,5 @@ public class ShownVoteHeadDTO {
     private String title;
 
     private Integer participatedNum;
-
-    private boolean participated;
     //내가 참가했던 여부...
 }

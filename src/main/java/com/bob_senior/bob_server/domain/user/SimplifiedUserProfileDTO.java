@@ -8,13 +8,21 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class SimplifiedUserProfileDTO {
+    //TODO : 데이터 추가
+
+    private Long userIdx;
 
     private String nickname;
 
     private String department;
 
-    private String schoolId;
+    private String schoolId; //
 
     private String school;
 
+    private boolean isOnline;
+
+    //private String uuid;
+
+    //private String profileImg;
 }

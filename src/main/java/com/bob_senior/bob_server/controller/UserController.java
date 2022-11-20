@@ -3,10 +3,7 @@ package com.bob_senior.bob_server.controller;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
-import com.bob_senior.bob_server.domain.user.DetermineFriendshipDTO;
-import com.bob_senior.bob_server.domain.user.RequestFriendshipDTO;
-import com.bob_senior.bob_server.domain.user.RequireBlockDTO;
-import com.bob_senior.bob_server.domain.user.SimplifiedUserProfileDTO;
+import com.bob_senior.bob_server.domain.user.*;
 import com.bob_senior.bob_server.service.AppointmentService;
 import com.bob_senior.bob_server.service.UserService;
 import lombok.extern.log4j.Log4j2;
@@ -50,7 +47,7 @@ public class UserController {
      * FriendShip
      **/
 
-    //해당 유저에게 친구추가 요청
+    //해당 유저에게 친구추가 요청  **NOTICE make
     @PostMapping("/user/friendship/request")
     public BaseResponse makeFriendshipRequestByUserIdx(@RequestBody RequestFriendshipDTO requestFriendshipDTO){
         if(!userService.checkUserExist(requestFriendshipDTO.getRequesterIdx())){
@@ -67,7 +64,7 @@ public class UserController {
 
 
 
-    //자신에게 온 친구추가목록 확인
+    //자신에게 온 친구추가목록 확인 **NOTICE 해제
     @GetMapping("/user/friendship/check")
     public BaseResponse getMyRequestedFriendShip(@RequestBody Long userIdx, Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
@@ -84,7 +81,7 @@ public class UserController {
 
 
 
-    //친구 요청 처리 -> boolean으로 결정
+    //친구 요청 처리 -> boolean으로 결정 ** NOTICE MAKE
     @PostMapping("/user/friendship/determine")
     public BaseResponse determineFriendshipRequest(@RequestBody DetermineFriendshipDTO determineFriendshipDTO){
         if(!userService.checkUserExist(determineFriendshipDTO.getUserIdx())){
@@ -93,6 +90,20 @@ public class UserController {
         try{
             userService.determineFriendRequest(determineFriendshipDTO.getUserIdx(),determineFriendshipDTO.getTargetIdx(),determineFriendshipDTO.isAccept());
             return new BaseResponse(BaseResponseStatus.SUCCESS);
+        }catch(BaseException e){
+            return new BaseResponse(e.getStatus());
+        }
+    }
+
+    @GetMapping("/user/friendship/list")
+    public BaseResponse getMyFriendshipList(@RequestBody UserIdxDTO userIdxDTO,Pageable pageable){
+        long userIdx = userIdxDTO.getUserIdx();
+        if(!userService.checkUserExist(userIdx)){
+            return new BaseResponse(BaseResponseStatus.INVALID_USER);
+        }
+        try{
+            List<SimplifiedUserProfileDTO> list = userService.getFriendList(userIdx,pageable);
+            return new BaseResponse(list);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }

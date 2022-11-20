@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @Builder
 public class AppointmentHeadDTO {
 
+    private Long postIdx;
+
     private String title;
 
     private Timestamp writtenAt;

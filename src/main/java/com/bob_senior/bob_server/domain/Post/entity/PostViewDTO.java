@@ -13,6 +13,8 @@ import java.util.List;
 @Builder
 public class PostViewDTO {
 
+    private Long postIdx;
+
     private String title;
 
     private String groupConstraint;

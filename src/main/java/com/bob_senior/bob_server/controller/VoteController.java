@@ -13,6 +13,9 @@ import com.bob_senior.bob_server.service.VoteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -45,16 +48,17 @@ public class VoteController {
      */
 
 
-    //현재 채팅방에 activated의 vote리스트 가져오기
+    //현재 채팅방에 종료된 vote리스트 가져오기
     @GetMapping("/appointment/vote/list")
-    public BaseResponse getCurrentActivatingVoteList(@RequestParam Long roomIdx, @RequestParam Long userIdx, Pageable pageable){
+    public BaseResponse getCurrentActivatingVoteList(@RequestParam Long roomIdx, @RequestBody UserIdxDTO userIdxDTO){
+        long userIdx = userIdxDTO.getUserIdx();
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
             return new BaseResponse(BaseResponseStatus.NO_VOTE_IN_CHATROOM);
         }
         //투표가 존재시 가장 최근의 투표 1개만 가져온다.
         //option 2 : 현재 activated인 리스트를 전부 가져와서 head만 보여주고, 각 head를 선택하면 투표화면으로 넘어가게?
         try{
-            return new BaseResponse(voteService.getMostRecentVoteInChatroom(roomIdx,userIdx,pageable));
+            return new BaseResponse(voteService.getMostRecentVoteInChatroom(roomIdx,userIdx));
         }
         catch(BaseException e){
             return new BaseResponse(e.getStatus());
@@ -85,15 +89,15 @@ public class VoteController {
 
 
 
-    //투표 생성 api
-    @PostMapping("/vote/init/{roomIdx}")
-    public BaseResponse makeNewVoteToRoom(@PathVariable Long roomIdx, @RequestBody MakeVoteDTO makeVoteDTO){
+    //투표 생성 api MAKE NOTICE
+    @PostMapping("/vote/init/{postIdx}")
+    public BaseResponse makeNewVoteToRoom(@PathVariable Long postIdx, @RequestBody MakeVoteDTO makeVoteDTO){
         System.out.println(makeVoteDTO.getContents());
         if(!userService.checkUserExist(makeVoteDTO.getMakerIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
             //...boilerplate....
         }
-        if(!chatService.checkUserParticipantChatting(roomIdx, makeVoteDTO.getMakerIdx())){
+        if(!chatService.checkUserParticipantChatting(postIdx, makeVoteDTO.getMakerIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         //고민사항 1. 투표의 개시를 무조건 글쓴사람만 할 수 있게 할것인가?
@@ -101,12 +105,12 @@ public class VoteController {
         //TODO : 투표의 시작에 대한 필터링?
         try{
             LocalDateTime ldt = LocalDateTime.now();
-            ShownVoteDTO vnr = voteService.makeNewVote(makeVoteDTO,ldt,roomIdx);
+            ShownVoteDTO vnr = voteService.makeNewVote(makeVoteDTO,ldt,postIdx);
             /*return new BaseResponse(
                     vnr
                     //만약 stomp로 한다면 이거 추가 필요..
             );*/
-            return new BaseResponse<>(BaseResponseStatus.SUCCESS);
+            return new BaseResponse(BaseResponseStatus.SUCCESS);
             //일반 postMappint으로 할 경우.. 그냥 성공화면만 띄워주고 직접 투표리스트에 가서 선택하도록
         }
         catch(BaseException e){
@@ -119,24 +123,24 @@ public class VoteController {
 
 
     //투표 api
-    @PostMapping("/vote/{roomId}")
-    public BaseResponse makeVote(@PathVariable Long roomId, @RequestBody UserVoteDTO userVoteDTO){
+    @PostMapping("/vote/{postIdx}")
+    public BaseResponse makeVote(@DestinationVariable Long postIdx, @RequestBody UserVoteDTO userVoteDTO){
         //1. 해당 유저가 적절한지 먼저 검사
         if(!userService.checkUserExist(userVoteDTO.getUserIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
         }
         //2. 해당 유저가 해당 방에 참가중인지 검사
-        if(!chatService.checkUserParticipantChatting(roomId,userVoteDTO.getUserIdx())){
+        if(!appointmentService.checkIfUserParticipating(postIdx, userVoteDTO.getUserIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         //3. 해당 vote가 valid한지 검사
-        if(!voteService.checkIfVoteIsValid(roomId,userVoteDTO.getVoteIdx())){
+        if(!voteService.checkIfVoteIsValid(postIdx,userVoteDTO.getVoteIdx())){
             //invalid vote Exception
             return new BaseResponse<>(BaseResponseStatus.ALREADY_VOTED);
         }
         try{
-            ShownVoteDTO vr = voteService.applyUserSelectionToVote(userVoteDTO);
-            return new BaseResponse<ShownVoteDTO>(vr);
+            voteService.applyUserSelectionToVote(userVoteDTO);
+            return new BaseResponse(BaseResponseStatus.SUCCESS);
             //이건 투표결과가 바로 반영되도록 데이터를 return해준다
             //다른방법 : front에서 optiministic 사용하면 되긴함..
         }
@@ -148,7 +152,7 @@ public class VoteController {
 
 
 
-    //투표 종료 api
+    //투표 종료 api MAKE NOTICE
     @PostMapping("/vote/terminate/{roomId}")
     public BaseResponse terminateVote(@PathVariable Long roomId,@RequestBody TerminateVoteDTO terminateVoteDTO){
         //Q)terminate이후 바로 투표내용을 적용할것인가?

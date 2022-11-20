@@ -3,6 +3,7 @@ package com.bob_senior.bob_server.service;
 import com.bob_senior.bob_server.domain.Post.entity.Post;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
+import com.bob_senior.bob_server.domain.notice.entity.Notice;
 import com.bob_senior.bob_server.domain.vote.*;
 import com.bob_senior.bob_server.domain.vote.entity.Vote;
 import com.bob_senior.bob_server.domain.vote.entity.VoteId;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 @Service
@@ -32,12 +34,16 @@ public class VoteService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostParticipantRepository postParticipantRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final PostPhotoRepository postPhotoRepository;
+    private final PostTagRepository postTagRepository;
+    private final NoticeRepository noticeRepository;
 
 
 
 
     @Autowired
-    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository, UserRepository userRepository, PostParticipantRepository postParticipantRepository) {
+    public VoteService(VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, VoteRecordRepository voteRecordRepository, ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, PostRepository postRepository, UserRepository userRepository, PostParticipantRepository postParticipantRepository, ChatMessageRepository chatMessageRepository, PostPhotoRepository postPhotoRepository, PostTagRepository postTagRepository, NoticeRepository noticeRepository) {
         this.voteRepository = voteRepository;
         this.voteParticipatedRepository = voteParticipatedRepository;
         this.voteRecordRepository = voteRecordRepository;
@@ -46,6 +52,10 @@ public class VoteService {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.postParticipantRepository = postParticipantRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.postPhotoRepository = postPhotoRepository;
+        this.postTagRepository = postTagRepository;
+        this.noticeRepository = noticeRepository;
     }
 
 
@@ -62,9 +72,9 @@ public class VoteService {
 
 
 
-    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(Long postIdx, Long userIdx, Pageable pageable) throws BaseException{
+    /*public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(Long postIdx, Long userIdx) throws BaseException{
         //1. 현재 postIdx에 걸린 activated vote를 전부 가져오기
-        List<Vote> lists = voteRepository.findAllByIsActivatedAndPostIdx(1,postIdx,pageable).getContent();
+        Vote vote = voteRepository.findVoteByIsActivatedAndPostIdx(1,postIdx);
 
         List<ShownVoteHeadDTO> dtos = new ArrayList<>();
         for (Vote vote : lists) {
@@ -80,18 +90,24 @@ public class VoteService {
             );
         }
         return dtos;
-    }
+    }*/
 
 
     public ShownVoteDTO getVoteByVoteIdx(Long voteIdx) throws BaseException{
         Vote vote = voteRepository.findVoteByVoteIdx(voteIdx);
         List<VoteRecord> records = voteRecordRepository.findAllByVoteId_VoteIdx(voteIdx);
+        List<ShownVoteRecord> dataRecord = new ArrayList<>();
+        for (VoteRecord record : records) {
+            dataRecord.add(
+                    ShownVoteRecord.builder().content(record.getVoteContent()).count(record.getCount()).build()
+            );
+        }
         return ShownVoteDTO.builder()
                 .voteIdx(vote.getVoteIdx())
                 .writerIdx(vote.getCreatorIdx())
                 .nickname(userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName())
                 .title(vote.getTitle())
-                .records(records)
+                .records(dataRecord)
                 .createdAt(vote.getCreatedAt())
                 .totalParticipated(vote.getParticipantNum())
                 .build();
@@ -101,7 +117,7 @@ public class VoteService {
 
 
     @Transactional
-    public ShownVoteDTO applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
+    public void applyUserSelectionToVote(UserVoteDTO userVoteDTO) throws BaseException {
         Vote vote = voteRepository.findVoteByVoteIdx(userVoteDTO.getVoteIdx());
         // 해당 유저가 이미 vote 했는지 확인
         boolean already_participated = voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVote_VoteIdx(
@@ -131,17 +147,6 @@ public class VoteService {
                         .userIdx(userVoteDTO.getUserIdx())
                         .build()
         );
-        //4. 현재까지의 voteResult를 모두에게 spread
-
-        return ShownVoteDTO.builder()
-                .voteIdx(vote.getVoteIdx())
-                .writerIdx(vote.getCreatorIdx())
-                .nickname(userRepository.findUserByUserIdx(vote.getCreatorIdx()).getNickName())
-                .title(vote.getTitle())
-                .createdAt(vote.getCreatedAt())
-                .totalParticipated(vote.getParticipantNum())
-                .records(voteRecordRepository.findAllByVoteId_VoteIdx(userVoteDTO.getVoteIdx()))
-                .build();
     }
 
 
@@ -155,9 +160,14 @@ public class VoteService {
             throw new BaseException(BaseResponseStatus.ALREADY_EXIST_VOTE_CONTENT);
         }
 
+        //0-2 이미 해당 post에 activating vote가 존재시 -> 정책 자체가 ongoing 투표는 무조건 1개로 고정...
+        if(voteRepository.existsVoteByPostIdxAndIsActivated(roomIdx,1)){
+            throw new BaseException(BaseResponseStatus.ALREADY_EXIST_ONGOING_VOTE);
+        }
+
         //1. record들을 만들기
         List<String> list = makeVoteDTO.getContents();
-        ArrayList<VoteRecord> records = new ArrayList<>();
+        ArrayList<ShownVoteRecord> records = new ArrayList<>();
 
         //항목번호는 1부터 시작 -> generatedValue그대로 사용
 
@@ -170,7 +180,8 @@ public class VoteService {
                 .createdAt(ldt)
                 .isActivated(1)
                 .participantNum(0)
-                .voteType("NORMAL").UUID(uuid)
+                .voteType(makeVoteDTO.getVoteType())
+                .UUID(uuid)
                 .build());
         //voteIdx는 db에 의한 자동생성... 일단 생성한 뒤에 가져오는게 best->concurrency problem..?
 
@@ -187,7 +198,24 @@ public class VoteService {
                     .count(0)
                     .build();
             voteRecordRepository.save(record);
-            records.add(record);
+            records.add(
+                    ShownVoteRecord.builder().content(s).count(0).build()
+            );
+        }
+
+        //해당 게시글의 모두에게 notice생성 -> 게시자 말고
+        List<Long> userIdxSet = postParticipantRepository.getAllUserIdxInPostActivated(roomIdx);
+        for (Long idx : userIdxSet) {
+            if (idx == makeVoteDTO.getMakerIdx()) continue;
+            noticeRepository.save(
+                    Notice.builder()
+                            .userIdx(idx)
+                            .postIdx(roomIdx)
+                            .flag(0)
+                            .content("투표가 생성되었습니다.")
+                            .type("makeVote")
+                            .build()
+            );
         }
         return ShownVoteDTO.builder()
                 .voteIdx(vote.getVoteIdx())
@@ -209,54 +237,92 @@ public class VoteService {
         }
         //2. 투표를 종료시키기/투표 결과 받아오기
         voteRepository.updateStatus(0, terminateVoteDTO.getVoteIdx());
-        List<VoteRecord> vr = voteRecordRepository.findTop2ByVoteId_VoteIdxOrderByCountDesc(terminateVoteDTO.getVoteIdx());
-        if(vr.get(0).getCount() == vr.get(1).getCount()){
-            //동표가 발생한 경우
-            //TODO : 동표 발생시 어찌 처리할까요...
-        }
-        else {
-            //동표가 발생하지 않은 경우
-            VoteRecord selected = vr.get(0).getCount()>vr.get(1).getCount() ? vr.get(0) : vr.get(1);
-            Vote vote = voteRepository.findVoteByVoteIdx(terminateVoteDTO.getVoteIdx());
-            //appointment 불러오는 과정
-            handleVoteResultByType(vote.getVoteType(), selected, vote.getPostIdx());
-        }
+        VoteRecord vr = voteRecordRepository.findTop1ByVoteId_VoteIdxOrderByCountDesc(terminateVoteDTO.getVoteIdx());
+
+        Vote vote = voteRepository.findVoteByVoteIdx(terminateVoteDTO.getVoteIdx());
+
+        //모든 멤버 리스트 받아오기
+        List<Long> lists = postParticipantRepository.getAllUserIdxInPostActivated(roomId);
+        //appointment 불러오는 과정
+        handleVoteResultByType(vote.getVoteType(), vr, vote.getPostIdx(),vote,lists);
+
     }
 
-    private void handleVoteResultByType(String voteType, VoteRecord vr,Long postIdx) throws BaseException{
+    private void handleVoteResultByType(String voteType, VoteRecord vr,Long postIdx,Vote vote,List<Long> list) throws BaseException{
         //투표의 결과를 바로 반영 -> problem : 투표가 동률나오면?
         //TODO : 투표 타입에 따라 appointment의 정보를 가공
+        //TODO : 알람 table사용시 여기에 저장해야되나
         String result = vr.getVoteContent();
+        if(!voteType.equals("NORMAL") && vr.getCount()!=postRepository.getMaximumParticipationNumFromPost(vote.getPostIdx())){
+            throw new BaseException(BaseResponseStatus.VOTE_RESULT_IS_NOT_UNANIMITY);
+        }
+        String content = "";
         switch(voteType){
-            case "DATE" :{
-                //약속 시간 변경
+            case "FIX" : {
+                //시간 + 장소의 데이터로 넘어오게 되면 이를 바로 반영
+                //string의 pattern -> location$yyyy/MM/dd HH:mm -> $기준으로 split
+                StringTokenizer st = new StringTokenizer(vr.getVoteContent(),"$",false);
+                String location = st.nextToken();
+                String time_string = st.nextToken();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
-                LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(vr.getVoteContent()));
+                LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(time_string));
                 LocalDateTime now = LocalDateTime.now();
-                //현 시점보다 이전으로 설정하려먼 에러 발생
-                if(localDateTime.isBefore(now)) throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
+                if(now.isAfter(localDateTime)) throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
                 Timestamp ts = Timestamp.valueOf(localDateTime);
-                postRepository.applyVoteResultDate(ts,postIdx);
-            }
-            case "SPACE":{
-                //약속 장소 변경
-                postRepository.applyVoteResultLocation(result,postIdx);
-            }
-            case "CLOSURE":{
-                //모집 마감 투표
-                String state = "active";
-                if(result.equals("YES")) state = "FINISH";
-                postRepository.applyVoteResultRecruitment(state,postIdx);
+                postRepository.applyVoteResultDateAndLocation(ts,location,postIdx);
+                content = "약속이 확정되었습니다";
+                break;
             }
             case "BREAK" : {
                 //해당 게시글 폭파
                 //chatParticipant를 모두 제거, postParticipant도 모두 제거 , Post제거, Chatroom제거
+                //post삭제시 prev = postphoto, postTag, postParticipant,vote, voteRecord, voteParticipated
+                //chatroom삭제시 = chatparticipant, chatmessage삭제 요
                 Post post = postRepository.findPostByPostIdx(postIdx);
+                //chatRoom착제 prev
                 chatParticipantRepository.deleteAllParticipationInChatroom(post.getChatRoomIdx());
-                postParticipantRepository.deleteAllParticipantInPost(postIdx);
+                chatMessageRepository.deleteAllByChatRoom_ChatRoomIdx(post.getChatRoomIdx());
                 chatRepository.deleteById(post.getChatRoomIdx());
+                postPhotoRepository.deleteAllByPost(post);
+                postTagRepository.deleteAllByPost(post);
+                voteParticipatedRepository.deleteAllByVote(voteRepository.findVoteByVoteIdx(vr.getVoteId().getVoteIdx()));
+                voteRecordRepository.deleteAllByVoteId_VoteIdx(vr.getVoteId().getVoteIdx());
+                voteRepository.deleteById(vr.getVoteId().getVoteIdx());
+                postParticipantRepository.deleteAllParticipantInPost(postIdx);
                 postRepository.delete(post);
+                content = "약속이 파기되었습니다";
+                break;
+            }
+            default:{
+                content = "투표가 종료되었습니다";
+            }
+            for (Long idx : list) {
+                noticeRepository.save(
+                        Notice.builder()
+                                .userIdx(idx)
+                                .postIdx(postIdx)
+                                .type(voteType)
+                                .content(content)
+                                .flag(0)
+                                .build()
+                );
             }
         }
+    }
+
+    public List<ShownVoteHeadDTO> getMostRecentVoteInChatroom(Long roomIdx, long userIdx) throws BaseException{
+        List<Vote> list = voteRepository.findAllByPostIdxAndIsActivated(roomIdx,"finished");
+        List<ShownVoteHeadDTO> data = new ArrayList<>();
+        for (Vote vote : list) {
+            Long num = voteParticipatedRepository.countByVote_VoteIdx(vote.getVoteIdx());
+            data.add(
+              ShownVoteHeadDTO.builder()
+                      .title(vote.getTitle())
+                      .voteIdx(vote.getVoteIdx())
+                      .participatedNum(num.intValue())
+                      .build()
+            );
+        }
+        return data;
     }
 }

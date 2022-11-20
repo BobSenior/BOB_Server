@@ -10,13 +10,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
 
     @Transactional
     @Modifying
-    @Query(value = "update Post p set p.meetingDate = :meetingDate where p.postIdx = :postIdx")
-    void applyVoteResultDate(@Param("meetingDate")Timestamp meetingDate, @Param("postIdx") Long postIdx);
+    @Query(value = "update Post p set p.meetingDate = :meetingDate, p.place = :place where p.postIdx = :postIdx")
+    void applyVoteResultDateAndLocation(@Param("meetingDate")Timestamp meetingDate,@Param("place") String place, @Param("postIdx") Long postIdx);
 
     @Transactional
     @Modifying
@@ -36,11 +37,14 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     int getMaximumParticipationNumFromPost(@Param("postIdx") Long postIdx);
 
     //activate이면서 + constraint가 ANY or input과 동일한 것들을 가져오기
-    @Query(value = "select p from Post p where p.recruitmentStatus = 'ACTIVATE' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
-    Page<Post> getAllThatCanParticipant(@Param("dep") String dep,Pageable pageable);
+    @Query(value = "select p from Post p where p.recruitmentStatus = :status and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
+    Page<Post> getAllThatCanParticipant(@Param("status") String status,@Param("dep") String dep,Pageable pageable);
 
-    Page<Post> findAllByTitleLike(String title, Pageable pageable);
+      @Query(value = "select p from Post p where p.recruitmentStatus = :status and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title =:string")
+      Page<Post> searchAllParticipantThatCanParticipant(@Param("status") String status,@Param("dep") String dep, @Param("string") String string, Pageable pageable);
 
-    @Query(value = "select p from Post p where p.recruitmentStatus = 'ACTIVATE' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title like %:string%")
-    Page<Post> searchAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("string") String string,Pageable pageable);
+    List<Post> findAllByRecruitmentStatus(String status);
+
+    Post findPostByWriterIdxAndAndChatRoomIdx(Long writerIdx, Long chatRoomIdx);
+
 }

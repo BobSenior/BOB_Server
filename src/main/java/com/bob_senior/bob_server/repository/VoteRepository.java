@@ -10,11 +10,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface VoteRepository extends JpaRepository<Vote,Long> {
 
+    List<Vote> findAllByPostIdxAndIsActivated(long postIdx, String isActivated);
+
     boolean existsByVoteIdxAndPostIdx(Long voteIdx, Long voteRoomIdx);
 
+    Vote getVoteByPostIdx(long PostIdx);
 
     Vote findVoteByVoteIdx(Long voteIdx);
 
@@ -35,6 +39,7 @@ public interface VoteRepository extends JpaRepository<Vote,Long> {
     boolean existsVoteByPostIdxAndIsActivated(Long postIdx, int activated);
 
 
-    Page<Vote> findAllByIsActivatedAndPostIdx(Integer activated, Long postIdx, Pageable pageable);
+    Vote findVoteByIsActivatedAndPostIdx(Integer activated, Long postIdx);
 
+    Vote findVoteByPostIdxAndIsActivated(long postIdx, int activated);
 }

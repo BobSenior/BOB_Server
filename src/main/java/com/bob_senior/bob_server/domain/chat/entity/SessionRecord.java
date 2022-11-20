@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.Chat.entity;
+package com.bob_senior.bob_server.domain.chat.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

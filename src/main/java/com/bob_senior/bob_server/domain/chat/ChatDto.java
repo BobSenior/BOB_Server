@@ -1,4 +1,4 @@
-package com.bob_senior.bob_server.domain.Chat;
+package com.bob_senior.bob_server.domain.chat;
 
 
 import lombok.*;

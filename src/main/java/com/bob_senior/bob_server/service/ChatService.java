@@ -1,9 +1,9 @@
 package com.bob_senior.bob_server.service;
 
-import com.bob_senior.bob_server.domain.Chat.*;
-import com.bob_senior.bob_server.domain.Chat.entity.ChatMessage;
-import com.bob_senior.bob_server.domain.Chat.entity.ChatNUser;
-import com.bob_senior.bob_server.domain.Chat.entity.ChatParticipant;
+import com.bob_senior.bob_server.domain.chat.*;
+import com.bob_senior.bob_server.domain.chat.entity.ChatMessage;
+import com.bob_senior.bob_server.domain.chat.entity.ChatNUser;
+import com.bob_senior.bob_server.domain.chat.entity.ChatParticipant;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.repository.ChatMessageRepository;
 import com.bob_senior.bob_server.repository.ChatParticipantRepository;
@@ -59,13 +59,14 @@ public class ChatService {
 
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
-        boolean prev = chatParticipantRepository.existsChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
+        boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatIdx);
+        System.out.println("prev = " + prev);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getChatParticipantByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getByChatNUser_ChatRoomIdxAndChatNUser_UserIdx(chatIdx,userIdx);
         if(cp.getStatus().equals("Q")) return false;
         return true;
 
@@ -74,13 +75,13 @@ public class ChatService {
     //해당 유저의 lastRead기준으로 읽지 않은 개수 가져오기
     public Long getNumberOfUnreadChatByUserIdx(Long userIdx,Long roomIdx){
 
-        Timestamp ts = chatParticipantRepository.getLastReadByUserIdx(userIdx);
+        Timestamp ts = chatParticipantRepository.getLastReadByUserIdx(userIdx,roomIdx);
         if(ts == null){
             //null일시 새로 데이터를 세팅해주고 0개 return
-            return 0L;
+            return chatRepository.countByChatRoomChatRoomIdx(roomIdx);
         }
         LocalDateTime lastRead = ts.toLocalDateTime();
-        return chatRepository.countBySentAtAfter(lastRead);
+        return chatRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtIsAfter(roomIdx,lastRead);
     }
 
     //모든 채팅의 읽지 않은 개수를 가져오기
@@ -135,5 +136,17 @@ public class ChatService {
 
     public void activateChatParticipation(Long userIdx, Long roomId) {
         chatParticipantRepository.activateParticipation(userIdx,roomId);
+    }
+
+    public Long getAllUnreadChatNum(long userIdx) throws BaseException{
+
+        Long totalCount = 0L;
+        //1. 모든 chatParticipant가져오기
+        List<ChatParticipant> list = chatParticipantRepository.getAllByChatNUser_UserIdx(userIdx);
+        for (ChatParticipant chatParticipant : list) {
+            long roomIdx = chatParticipant.getChatNUser().getChatRoomIdx();
+            totalCount+=getNumberOfUnreadChatByUserIdx(userIdx,roomIdx);
+        }
+        return totalCount;
     }
 }

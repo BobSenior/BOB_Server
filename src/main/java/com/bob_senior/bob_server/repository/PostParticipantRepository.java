@@ -16,24 +16,32 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
 
     List<PostParticipant> findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(Long postIdx, String status,String position);
 
-    boolean existsByPostUser(PostUser id);
+    boolean existsByPostUser_PostIdxAndPostUser_UserIdxAndStatus(long postIdx,long userIdx, String status);
 
     Long countByPostUser_PostIdxAndStatus(Long postIdx, String status);
 
     Page<PostParticipant> findAllByPostUser_PostIdxAndStatus(Long postIdx, String Status, Pageable pageable);
+
+    @Query(value = "select p.postUser.userIdx from PostParticipant p where p.status='active' and p.postUser.postIdx=:postIdx")
+    List<Long> getAllUserIdxInPostActivated(@Param("postIdx") Long postIdx);
 
     @Transactional
     @Modifying
     @Query(value = "update PostParticipant p set p.status = :status where p.postUser.postIdx =:postIdx and p.postUser.userIdx = :userIdx")
     void changePostParticipationStatus(@Param("status") String status, @Param("postIdx") Long postIdx, @Param("userIdx") Long userIdx);
 
-    boolean existsByPostUserAndAndStatus(PostUser id, String status);
+    boolean existsByPostUserAndStatus(PostUser id, String status);
+
+    boolean existsByStatus(String status);
+
+    boolean existsByPostUser_PostIdxAndPostUser_UserIdx(long postIdx, long userIdx);
 
     Page<PostParticipant> findAllByPostUser_UserIdxAndStatus(Long userIdx, String Status, Pageable pageable);
 
 
     @Transactional
     void deleteByPostUser(PostUser postUser);
+
 
 
     @Transactional

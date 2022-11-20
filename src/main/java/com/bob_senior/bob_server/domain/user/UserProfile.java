@@ -11,6 +11,7 @@ import lombok.*;
 public class UserProfile {
 
     private String nickname;
+    //userIdx - long
 
     private String schoolId;
 
