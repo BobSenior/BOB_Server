@@ -20,6 +20,9 @@ public class VoteParticipated {
     @Column
     private Long userIdx;
 
+    @Column
+    private Long voteRecordIdx;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voteIdx")
     private Vote vote;

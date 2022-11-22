@@ -66,7 +66,7 @@ public class UserController {
 
     //자신에게 온 친구추가목록 확인 **NOTICE 해제
     @GetMapping("/user/friendship/check")
-    public BaseResponse getMyRequestedFriendShip(@RequestBody Long userIdx, Pageable pageable){
+    public BaseResponse getMyRequestedFriendShip(@RequestParam Long userIdx, Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -96,8 +96,7 @@ public class UserController {
     }
 
     @GetMapping("/user/friendship/list")
-    public BaseResponse getMyFriendshipList(@RequestBody UserIdxDTO userIdxDTO,Pageable pageable){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getMyFriendshipList(@RequestParam Long userIdx,Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

@@ -31,6 +31,7 @@ public class NoticeService {
         for (Notice notice : notices) {
             list.add(
             ShownNotice.builder()
+                    .noticeIdx(notice.getNoticeIdx())
                     .postIdx(notice.getPostIdx())
                     .type(notice.getType())
                     .text(notice.getContent())

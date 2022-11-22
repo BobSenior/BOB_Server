@@ -5,10 +5,7 @@ import com.bob_senior.bob_server.domain.chat.entity.ChatMessage;
 import com.bob_senior.bob_server.domain.chat.entity.ChatNUser;
 import com.bob_senior.bob_server.domain.chat.entity.ChatParticipant;
 import com.bob_senior.bob_server.domain.base.BaseException;
-import com.bob_senior.bob_server.repository.ChatMessageRepository;
-import com.bob_senior.bob_server.repository.ChatParticipantRepository;
-import com.bob_senior.bob_server.repository.ChatRepository;
-import com.bob_senior.bob_server.repository.ChatRoomRepository;
+import com.bob_senior.bob_server.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,13 +25,15 @@ public class ChatService {
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final PostRepository postRepository;
 
     @Autowired
-    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository){
+    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, PostRepository postRepository){
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRepository = chatRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomRepository = chatRoomRepository;
+        this.postRepository = postRepository;
     }
 
     //채팅 페이지 가져오기
@@ -59,14 +58,15 @@ public class ChatService {
 
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
-        boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatIdx);
-        System.out.println("prev = " + prev);
+        long chatRoomIdx = postRepository.findPostByPostIdx(chatIdx).getChatRoomIdx();
+        boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatRoomIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
         ChatParticipant cp = chatParticipantRepository.getByChatNUser_ChatRoomIdxAndChatNUser_UserIdx(chatIdx,userIdx);
+        if(cp == null) return true;
         if(cp.getStatus().equals("Q")) return false;
         return true;
 

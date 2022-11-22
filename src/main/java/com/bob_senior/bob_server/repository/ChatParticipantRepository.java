@@ -17,7 +17,7 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
 
     boolean existsByStatus(String status);
 
-    boolean existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Long userIdx,Long chatRoomIdx);
+    boolean existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(Long userIdx, Long chatRoomIdx);
 
     ChatParticipant getByChatNUser_ChatRoomIdxAndChatNUser_UserIdx(Long chatRoomIdx, Long userIdx);
 

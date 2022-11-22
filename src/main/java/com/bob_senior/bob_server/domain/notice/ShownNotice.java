@@ -9,6 +9,8 @@ import lombok.*;
 @Builder
 public class ShownNotice {
 
+    private Long noticeIdx;
+
     private Long postIdx;
 
     private String type;

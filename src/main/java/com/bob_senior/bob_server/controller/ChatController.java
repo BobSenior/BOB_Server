@@ -19,10 +19,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
 
@@ -159,8 +156,7 @@ public class ChatController {
     //2. 해당 채팅방에서 읽지 않은 채팅 개수 구하기
     //아니면 해당 유저가 읽지 않은 개수를 모두 구해오는것도 가능하긴 함
     @GetMapping("/chat/unread/{roomId}")
-    public BaseResponse getUnreadChatNum(@PathVariable Long roomId, @RequestBody UserIdxDTO userIdxDTO){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getUnreadChatNum(@PathVariable Long roomId, @RequestParam Long userIdx){
         //해당 유저가 valid한지 먼저 확인
         if(!userService.checkUserExist(userIdx)){
             //TODO : 유저 존재하지 않을 경우 handling - exception을 던져도 되고
@@ -177,8 +173,7 @@ public class ChatController {
 
 
     @GetMapping("/chat/unread/total")
-    public BaseResponse getAllUnreadChatCount(@RequestBody UserIdxDTO userIdxDTO){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getAllUnreadChatCount(@RequestParam Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

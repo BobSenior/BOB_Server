@@ -50,8 +50,7 @@ public class VoteController {
 
     //현재 채팅방에 종료된 vote리스트 가져오기
     @GetMapping("/appointment/vote/list")
-    public BaseResponse getCurrentActivatingVoteList(@RequestParam Long roomIdx, @RequestBody UserIdxDTO userIdxDTO){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getCurrentActivatingVoteList(@RequestParam Long roomIdx,@RequestParam Long userIdx){
         if(!voteService.hasActivatedVoteInRoom(roomIdx)){
             return new BaseResponse(BaseResponseStatus.NO_VOTE_IN_CHATROOM);
         }
@@ -92,7 +91,6 @@ public class VoteController {
     //투표 생성 api MAKE NOTICE
     @PostMapping("/vote/init/{postIdx}")
     public BaseResponse makeNewVoteToRoom(@PathVariable Long postIdx, @RequestBody MakeVoteDTO makeVoteDTO){
-        System.out.println(makeVoteDTO.getContents());
         if(!userService.checkUserExist(makeVoteDTO.getMakerIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
             //...boilerplate....
@@ -124,7 +122,7 @@ public class VoteController {
 
     //투표 api
     @PostMapping("/vote/{postIdx}")
-    public BaseResponse makeVote(@DestinationVariable Long postIdx, @RequestBody UserVoteDTO userVoteDTO){
+    public BaseResponse makeVote(@PathVariable Long postIdx, @RequestBody UserVoteDTO userVoteDTO){
         //1. 해당 유저가 적절한지 먼저 검사
         if(!userService.checkUserExist(userVoteDTO.getUserIdx())){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);

@@ -16,6 +16,7 @@ import com.bob_senior.bob_server.domain.vote.ShownVoteRecord;
 import com.bob_senior.bob_server.domain.vote.entity.Vote;
 import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
+import com.fasterxml.jackson.databind.ser.Serializers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -109,6 +110,17 @@ public class AppointmentService {
         //해당 post에 달린 모든 notice를 해제시킨다
         noticeRepository.disablePostRelatedNotice(postIdx,userIdx);
 
+        if(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1) == null){
+            return AppointmentViewDTO.builder()
+                    .postIdx(post.getPostIdx())
+                    .location(post.getPlace())
+                    .meetingAt(post.getMeetingDate())
+                    .buyers(buyer)
+                    .receivers(receiver)
+                    .chatRoomIdx(post.getChatRoomIdx())
+                    .build();
+        }
+
         return AppointmentViewDTO.builder()
                 .postIdx(post.getPostIdx())
                 .location(post.getPlace())
@@ -136,11 +148,19 @@ public class AppointmentService {
         for (PostParticipant waiting : participantList) {
             Post post = postRepository.findPostByPostIdx(waiting.getPostUser().getPostIdx());
 
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
+
+            List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
+            List<String> heads = new ArrayList<>();
+            for (PostTag tag : tags) {
+                heads.add(tag.getTagContent());
+            }
+
+
 
             SimplifiedUserProfileDTO writer_simp = SimplifiedUserProfileDTO.builder()
                     .userIdx(writer.getUserIdx())
@@ -168,6 +188,7 @@ public class AppointmentService {
                             .totalNum(post.getParticipantLimit())
                             .currNum(currNum)
                             .waitingNum(waitingNum)
+                            .tagHeads(heads)
                             .build()
             );
         }
@@ -260,7 +281,7 @@ public class AppointmentService {
                         .userIdx(postRepository.findPostByPostIdx(postIdx).getWriterIdx())
                         .postIdx(postIdx)
                         .flag(0)
-                        .content("참가요청청")
+                        .content(postIdx+"에 참가요청이 있습니다")
                         .type("request")
                        .build()
         );
@@ -328,7 +349,7 @@ public class AppointmentService {
             //2. 그 후 해당 post의 chatroom에 추가 ->
             chatParticipantRepository.save(
                     ChatParticipant.builder()
-                            .chatNUser(new ChatNUser(postIdx,requesterIdx))
+                            .chatNUser(new ChatNUser(post.getChatRoomIdx(),requesterIdx))
                             .status("active")
                             .lastRead(null)
                             .build()
@@ -369,6 +390,12 @@ public class AppointmentService {
 
             long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
+            List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
+            List<String> heads = new ArrayList<>();
+            for (PostTag tag : tags) {
+                heads.add(tag.getTagContent());
+            }
+
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
             data.add(
                     AppointmentHeadDTO.builder()
@@ -388,12 +415,14 @@ public class AppointmentService {
                                             .build()
                             )
                             .location(post.getPlace())
+                            .writtenAt(post.getRegisteredAt())
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
                             .totalNum(post.getParticipantLimit())
                             .currNum(currNum)
                             .waitingNum(waitingNum)
+                            .tagHeads(heads)
                             .build()
             );
         }
@@ -475,6 +504,12 @@ public class AppointmentService {
 
             long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"WAITING");
 
+            List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
+            List<String> tghead = new ArrayList<>();
+            for (PostTag tag : tags) {
+                tghead.add(tag.getTagContent());
+            }
+
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
             heads.add(
                     AppointmentHeadDTO.builder()
@@ -501,6 +536,7 @@ public class AppointmentService {
                             .totalNum(post.getParticipantLimit())
                             .currNum(currNum)
                             .waitingNum(waitingNum)
+                            .tagHeads(tghead)
                             .build()
             );
         }
@@ -521,6 +557,13 @@ public class AppointmentService {
             long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
 
             long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+
+            List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
+            List<String> tghead = new ArrayList<>();
+            for (PostTag tagg : tags) {
+                tghead.add(tagg.getTagContent());
+            }
+
 
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
             heads.add(
@@ -547,6 +590,7 @@ public class AppointmentService {
                             .totalNum(post.getParticipantLimit())
                             .currNum(currNum)
                             .waitingNum(waitingNum)
+                            .tagHeads(tghead)
                             .build()
             );
         }
@@ -729,6 +773,20 @@ public class AppointmentService {
             );
         }
 
+    }
+
+    public void drawbackRequest(Long userIdx, Long postIdx) throws BaseException {
+       //1. 존재하지 않는지 확인
+        boolean existCheck = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdx(postIdx,userIdx);
+        if(!existCheck){
+            throw new BaseException(BaseResponseStatus.INVALID_ACCESS_TO_APPOINTMENT);
+        }
+        boolean participantCheck = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdxAndStatus(postIdx,userIdx,"active");
+        if(participantCheck){
+            throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
+        }
+        PostParticipant pp = postParticipantRepository.findByPostUser_PostIdxAndPostUser_UserIdxAndStatus(postIdx,userIdx,"waiting");
+        postParticipantRepository.delete(pp);
     }
 }
 

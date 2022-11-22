@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Controller
+@RestController
 public class NoticeController {
 
     private final UserService userService;
@@ -27,8 +29,7 @@ public class NoticeController {
     }
 
     @GetMapping("/notice/total")
-    public BaseResponse getTotalActivatingNoticeNum(@RequestBody UserIdxDTO userIdxDTO){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getTotalActivatingNoticeNum(@RequestParam Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
@@ -41,8 +42,7 @@ public class NoticeController {
     }
 
     @GetMapping("/notice/list")
-    public BaseResponse getMyNoticeList(@RequestBody UserIdxDTO userIdxDTO){
-        long userIdx = userIdxDTO.getUserIdx();
+    public BaseResponse getMyNoticeList(@RequestParam Long userIdx){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

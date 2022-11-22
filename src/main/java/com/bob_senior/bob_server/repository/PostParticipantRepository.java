@@ -14,6 +14,8 @@ import java.util.List;
 
 public interface PostParticipantRepository extends JpaRepository<PostParticipant, Long> {
 
+    PostParticipant findByPostUser_PostIdxAndPostUser_UserIdxAndStatus(long postIdx, long userIdx, String status);
+
     List<PostParticipant> findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(Long postIdx, String status,String position);
 
     boolean existsByPostUser_PostIdxAndPostUser_UserIdxAndStatus(long postIdx,long userIdx, String status);

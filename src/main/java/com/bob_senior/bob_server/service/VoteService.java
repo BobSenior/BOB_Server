@@ -145,6 +145,7 @@ public class VoteService {
                 VoteParticipated.builder()
                         .vote(vote)
                         .userIdx(userVoteDTO.getUserIdx())
+                        .voteRecordIdx(vr.getVoteRecordIdx())
                         .build()
         );
     }
@@ -261,6 +262,13 @@ public class VoteService {
             case "FIX" : {
                 //시간 + 장소의 데이터로 넘어오게 되면 이를 바로 반영
                 //string의 pattern -> location$yyyy/MM/dd HH:mm -> $기준으로 split
+                //1. 만장일치인지 확인하기
+                int total_Num = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active").intValue();
+                if(vr.getCount()<total_Num){
+                    //reject changing
+                    content="투표가 종료되었습니다";
+                    break;
+                }
                 StringTokenizer st = new StringTokenizer(vr.getVoteContent(),"$",false);
                 String location = st.nextToken();
                 String time_string = st.nextToken();
