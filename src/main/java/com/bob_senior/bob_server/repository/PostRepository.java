@@ -2,6 +2,7 @@ package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.Post.entity.Post;
 import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -40,8 +41,9 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Query(value = "select p from Post p where p.recruitmentStatus = :status and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
     Page<Post> getAllThatCanParticipant(@Param("status") String status,@Param("dep") String dep,Pageable pageable);
 
-      @Query(value = "select p from Post p where p.recruitmentStatus = :status and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title =:string")
-      Page<Post> searchAllParticipantThatCanParticipant(@Param("status") String status,@Param("dep") String dep, @Param("string") String string, Pageable pageable);
+    @Query(value = "select p from Post p where p.recruitmentStatus = 'active' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title LIKE %:title%")
+    Page<Post> getAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("title") String title, Pageable pageable);
+
 
     List<Post> findAllByRecruitmentStatus(String status);
 

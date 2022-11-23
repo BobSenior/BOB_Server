@@ -18,6 +18,7 @@ import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
 import com.fasterxml.jackson.databind.ser.Serializers;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -383,6 +384,7 @@ public class AppointmentService {
         //1. 유저의 소속정보 가져오기(school, dep, year)
         User user = userRepository.findUserByUserIdx(userIdx);
         List<Post> posts = postRepository.getAllThatCanParticipant("active",user.getDepartment(),pageable).getContent();
+        System.out.println("posts = " + posts + pageable);
         List<AppointmentHeadDTO> data = new ArrayList<>();
         for (Post post : posts) {
 
@@ -497,12 +499,16 @@ public class AppointmentService {
     //해당 string으로 검색하기 -> 타이틀 검색?
     public List<AppointmentHeadDTO> searchByStringInTitle(Long userIdx,String searchString, Pageable pageable) throws BaseException {
         List<AppointmentHeadDTO> heads = new ArrayList<>();
+        User user = userRepository.findUserByUserIdx(userIdx);
         String dep = userRepository.findUserByUserIdx(userIdx).getDepartment();
-        List<Post> list = postRepository.searchAllParticipantThatCanParticipant("active",dep,searchString,pageable).getContent();
+        System.out.println("searchString = " + searchString);
+        //List<Post> list = postRepository.searchAllParticipantThatCanParticipant("active",dep,searchString,pageable).getContent();
+        List<Post> list = postRepository.getAllParticipantThatCanParticipant(dep,searchString,pageable).getContent();
+        System.out.println("list = " + list);
         for (Post post : list) {
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
             List<String> tghead = new ArrayList<>();
@@ -554,9 +560,9 @@ public class AppointmentService {
         List<PostTag> list = postTagRepository.searchTagThatCanParticipate(tag,dep,pageable).getContent();
         for (PostTag pt : list) {
             Post post = pt.getPost();
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"PARTICIPATE");
+            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"WAITING");
+            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
             List<String> tghead = new ArrayList<>();
