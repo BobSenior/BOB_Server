@@ -11,7 +11,6 @@ import com.bob_senior.bob_server.domain.vote.entity.VoteParticipated;
 import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -263,7 +262,7 @@ public class VoteService {
                 //시간 + 장소의 데이터로 넘어오게 되면 이를 바로 반영
                 //string의 pattern -> location$yyyy/MM/dd HH:mm -> $기준으로 split
                 //1. 만장일치인지 확인하기
-                int total_Num = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active").intValue();
+                int total_Num = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active").intValue();
                 if(vr.getCount()<total_Num){
                     //reject changing
                     content="투표가 종료되었습니다";

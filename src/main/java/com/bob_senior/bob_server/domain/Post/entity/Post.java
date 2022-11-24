@@ -6,6 +6,8 @@ import org.hibernate.annotations.DynamicInsert;
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,4 +57,12 @@ public class Post {
 
     @Column
     private Long chatRoomIdx;
+
+    @OneToMany(mappedBy = "post")
+    private List<PostParticipant> participantList = new ArrayList<>();
+
+    public boolean contains(){
+        return false;
+    }
+
 }

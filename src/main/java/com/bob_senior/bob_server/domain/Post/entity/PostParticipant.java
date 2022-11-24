@@ -16,8 +16,8 @@ public class PostParticipant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postParticipantIdx;
 
-    @Embedded
-    private PostUser postUser;
+    @Column
+    private Long userIdx;
 
     @Column(name="status")
     private String status;
@@ -28,5 +28,9 @@ public class PostParticipant {
     /**
      * 연관관계
      */
+
+    @ManyToOne
+    @JoinColumn(name = "postIdx")
+    private Post post;
 
 }

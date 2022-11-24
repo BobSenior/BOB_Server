@@ -16,9 +16,7 @@ import com.bob_senior.bob_server.domain.vote.ShownVoteRecord;
 import com.bob_senior.bob_server.domain.vote.entity.Vote;
 import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -67,10 +65,10 @@ public class AppointmentService {
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
 
-        List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
-        List<PostParticipant> receiver_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(postIdx,"active","receiver");
+        List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPost_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
+        List<PostParticipant> receiver_prev = postParticipantRepository.findPostParticipantsByPost_PostIdxAndStatusAndPosition(postIdx,"active","receiver");
         for (PostParticipant participant : buyer_prev) {
-            User user = userRepository.findUserByUserIdx(participant.getPostUser().getUserIdx());
+            User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             buyer.add(
                     SimplifiedUserProfileDTO.builder()
                             .userIdx(user.getUserIdx())
@@ -83,7 +81,7 @@ public class AppointmentService {
             );
         }
         for (PostParticipant participant : receiver_prev) {
-            User user = userRepository.findUserByUserIdx(participant.getPostUser().getUserIdx());
+            User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             receiver.add(
                     SimplifiedUserProfileDTO.builder()
                             .userIdx(user.getUserIdx())
@@ -142,16 +140,16 @@ public class AppointmentService {
     public List<AppointmentHeadDTO> getUserWaitingAppointment(Long userIdx, Pageable pageable) throws BaseException{
         //해당 유저의 waiting상태의 request을 전부 가져오기
         //List<AppointmentRequest> appointmentList= appointmentRequestRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
-        List<PostParticipant> participantList = postParticipantRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
+        List<PostParticipant> participantList = postParticipantRepository.findAllByUserIdxAndStatus(userIdx,"WAITING",pageable).getContent();
 
         List<AppointmentHeadDTO> data = new ArrayList<>();
 
         for (PostParticipant waiting : participantList) {
-            Post post = postRepository.findPostByPostIdx(waiting.getPostUser().getPostIdx());
+            Post post = postRepository.findPostByPostIdx(waiting.getPost().getPostIdx());
 
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
+            long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
+            long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
 
@@ -201,16 +199,16 @@ public class AppointmentService {
 
     public List<AppointmentHeadDTO> getUserParticipatedAppointment(Long userIdx, Pageable pageable) throws BaseException{
 
-        List<PostParticipant> list_participating = postParticipantRepository.findAllByPostUser_UserIdxAndStatus(userIdx,"active",pageable).getContent();
+        List<PostParticipant> list_participating = postParticipantRepository.findAllByUserIdxAndStatus(userIdx,"active",pageable).getContent();
 
         List<AppointmentHeadDTO> data = new ArrayList<>();
 
         for (PostParticipant participant : list_participating) {
-            Post post = postRepository.findPostByPostIdx(participant.getPostUser().getPostIdx());
+            Post post = postRepository.findPostByPostIdx(participant.getPost().getPostIdx());
 
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
+            long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
+            long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
 
@@ -257,11 +255,11 @@ public class AppointmentService {
         if(!exist) throw new BaseException(BaseResponseStatus.NON_EXIST_POSTIDX);
 
          //2. 해당 방에 이미 참여중인지 확인 or 이미 waiting인 상태가 존재하는지 or 이미 reject된게 존재하는지 -> 그냥 participant를 보면 되네
-        boolean already_participated = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdx(postIdx,userIdx);
+        boolean already_participated = postParticipantRepository.existsByPost_PostIdxAndUserIdx(postIdx,userIdx);
         if(already_participated) throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
 
         //3. 이미 만료된(풀방, finished)인지 확인
-        Long cur_participation_count = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active");
+        Long cur_participation_count = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
         Post p = postRepository.findPostByPostIdx(postIdx);
         if(cur_participation_count>=p.getParticipantLimit()
                 || p.getRecruitmentStatus() == "FINISHED"){
@@ -271,7 +269,8 @@ public class AppointmentService {
 
         //4. 위의 verification 을 모두 통과시 participation 을 추가하기
         postParticipantRepository.save(PostParticipant.builder()
-                .postUser(new PostUser(postIdx,userIdx))
+                .userIdx(userIdx)
+                .post(postRepository.findPostByPostIdx(postIdx))
                 .status("waiting")
                 .position(position)
                 .build());
@@ -309,10 +308,10 @@ public class AppointmentService {
 
     public List<SimplifiedUserProfileDTO> getAllRequestInPost(Long userIdx,Long postIdx, Pageable pageable) {
         //모든 request의 head를 가져온다.
-        List<PostParticipant> list = postParticipantRepository.findAllByPostUser_PostIdxAndStatus(postIdx,"waiting",pageable).getContent();
+        List<PostParticipant> list = postParticipantRepository.findAllByPost_PostIdxAndStatus(postIdx,"waiting",pageable).getContent();
         List<SimplifiedUserProfileDTO> data = new ArrayList<>();
         for (PostParticipant participant : list) {
-            User user = userRepository.findUserByUserIdx(participant.getPostUser().getUserIdx());
+            User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             data.add(SimplifiedUserProfileDTO.builder()
                     .userIdx(user.getUserIdx())
                     .nickname(user.getNickName())
@@ -331,11 +330,11 @@ public class AppointmentService {
 
     public void determineRequestStatus(Long postIdx, Long requesterIdx, boolean accept) throws BaseException{
         //1. 해당 request가 존재했는지 확인하는게 우선
-        boolean isExist = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdx(postIdx,requesterIdx);
+        boolean isExist = postParticipantRepository.existsByPost_PostIdxAndUserIdx(postIdx,requesterIdx);
         if(!isExist) throw new BaseException(BaseResponseStatus.NON_EXIST_POST_PARTICIPATION);
         Post post = postRepository.findPostByPostIdx(postIdx);
         int total = post.getParticipantLimit();
-        long curr = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active");
+        long curr = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
         if(total - curr <=0){
             //더이상 참여 불가능 ->
             throw new BaseException(BaseResponseStatus.UNABLE_TO_PARTICIPATE_IN_POST);
@@ -383,14 +382,15 @@ public class AppointmentService {
     public List<AppointmentHeadDTO> getAvailableAppointmentList(Long userIdx, Pageable pageable) {
         //1. 유저의 소속정보 가져오기(school, dep, year)
         User user = userRepository.findUserByUserIdx(userIdx);
-        List<Post> posts = postRepository.getAllThatCanParticipant("active",user.getDepartment(),pageable).getContent();
+        LocalDateTime now = LocalDateTime.now();
+        List<Post> posts = postRepository.getAllThatCanParticipant("active",user.getDepartment(),now,userIdx,pageable).getContent();
         System.out.println("posts = " + posts + pageable);
         List<AppointmentHeadDTO> data = new ArrayList<>();
         for (Post post : posts) {
 
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
+            long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
+            long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
             List<String> heads = new ArrayList<>();
@@ -440,7 +440,7 @@ public class AppointmentService {
         Post post = postRepository.findPostByPostIdx(postIdx);
         int total = post.getParticipantLimit();
         //현재 참여중인 user의 수
-        long curr = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active");
+        long curr = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
 
         //더이상 참여가 불가능한 경우
         if(total - curr <=0){
@@ -455,14 +455,17 @@ public class AppointmentService {
         User user = userRepository.findByUuid(invitedUUID);
 
         //이미 참여중인 경우
-        if(postParticipantRepository.existsByPostUserAndStatus(new PostUser(postIdx,user.getUserIdx()),"active")){
+        if(postParticipantRepository.existsByPost_PostIdxAndUserIdxAndStatus(postIdx,user.getUserIdx(),"active")){
             throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
         }
 
         //참여시키기 1. postParticipant에 추가 + chatParticipant에 추가
         postParticipantRepository.save(PostParticipant.builder()
-                .postUser(new PostUser(postIdx,user.getUserIdx()))
-                .status("PARTICIPATE")
+                .userIdx(user.getUserIdx())
+                .status("active")
+                .post(post)
+                //TODO : position변동 설정
+                        .position("buyer")
                 .build()
         );
 
@@ -500,15 +503,15 @@ public class AppointmentService {
     public List<AppointmentHeadDTO> searchByStringInTitle(Long userIdx,String searchString, Pageable pageable) throws BaseException {
         List<AppointmentHeadDTO> heads = new ArrayList<>();
         User user = userRepository.findUserByUserIdx(userIdx);
+        LocalDateTime now = LocalDateTime.now();
         String dep = userRepository.findUserByUserIdx(userIdx).getDepartment();
-        System.out.println("searchString = " + searchString);
         //List<Post> list = postRepository.searchAllParticipantThatCanParticipant("active",dep,searchString,pageable).getContent();
-        List<Post> list = postRepository.getAllParticipantThatCanParticipant(dep,searchString,pageable).getContent();
+        List<Post> list = postRepository.getAllParticipantThatCanParticipant(dep,searchString,now,userIdx,pageable).getContent();
         System.out.println("list = " + list);
         for (Post post : list) {
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
+            long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
+            long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
             List<String> tghead = new ArrayList<>();
@@ -560,9 +563,9 @@ public class AppointmentService {
         List<PostTag> list = postTagRepository.searchTagThatCanParticipate(tag,dep,pageable).getContent();
         for (PostTag pt : list) {
             Post post = pt.getPost();
-            long currNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"active");
+            long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
-            long waitingNum = postParticipantRepository.countByPostUser_PostIdxAndStatus(post.getPostIdx(),"waiting");
+            long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
 
             List<PostTag> tags = postTagRepository.findAllByPost_PostIdx(post.getPostIdx());
             List<String> tghead = new ArrayList<>();
@@ -610,10 +613,10 @@ public class AppointmentService {
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
 
-        List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(roomIdx,"active","buyer");
-        List<PostParticipant> receiver_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(roomIdx,"active","receiver");
+        List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPost_PostIdxAndStatusAndPosition(roomIdx,"active","buyer");
+        List<PostParticipant> receiver_prev = postParticipantRepository.findPostParticipantsByPost_PostIdxAndStatusAndPosition(roomIdx,"active","receiver");
         for (PostParticipant participant : buyer_prev) {
-            User user = userRepository.findUserByUserIdx(participant.getPostUser().getUserIdx());
+            User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             buyer.add(
                     SimplifiedUserProfileDTO.builder()
                             .userIdx(user.getUserIdx())
@@ -625,7 +628,7 @@ public class AppointmentService {
             );
         }
         for (PostParticipant participant : receiver_prev) {
-            User user = userRepository.findUserByUserIdx(participant.getPostUser().getUserIdx());
+            User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             receiver.add(
                     SimplifiedUserProfileDTO.builder()
                             .userIdx(user.getUserIdx())
@@ -644,7 +647,7 @@ public class AppointmentService {
             heads.add(tag.getTagContent());
         }
 
-        boolean isRequested = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdx(roomIdx,userIdx);
+        boolean isRequested = postParticipantRepository.existsByPost_PostIdxAndUserIdx(roomIdx,userIdx);
 
         return PostViewDTO.builder()
                 .postIdx(post.getPostIdx())
@@ -661,19 +664,19 @@ public class AppointmentService {
     }
 
     public boolean checkIfUserParticipating(long postIdx, long userIdx) {
-        return postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdxAndStatus(postIdx,userIdx,"active");
+        return postParticipantRepository.existsByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"active");
     }
 
     public void exitAppointment(long postIdx, long userIdx) throws BaseException {
         //해당 post에서 나가기
         //1. 일단 postParticipant에서 제거
-        postParticipantRepository.deleteByPostUser(new PostUser(postIdx, userIdx));
+        postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx, userIdx);
         Post post = postRepository.findPostByPostIdx(postIdx);
         Long chatRoomIdx = post.getChatRoomIdx();
         chatParticipantRepository.deleteByChatNUser(new ChatNUser(chatRoomIdx,userIdx));
 
         //2. 해당 user의 이탈로 만약 더이상 참여 인원이 없을시 -> post와 chatroom을 제거
-        long remains = postParticipantRepository.countByPostUser_PostIdxAndStatus(postIdx,"active");
+        long remains = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
         if(remains == 0){
             //제거
             chatRoomRepository.deleteById(chatRoomIdx);
@@ -682,7 +685,7 @@ public class AppointmentService {
         //3. 해당 유저가 post의 주인일 경우? 아무 buyer에게 owner권한을 넘기자
         //만약 buyer가 없다면?.... 방을 터트리는게 맞지 않을까
 
-        long remains_buyer = postParticipantRepository.countByPostUser_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
+        long remains_buyer = postParticipantRepository.countByPost_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
         if(remains_buyer == 0){
             //TODO : buyer가 전부 나간 상황에서 어찌처리할지 결정 해야함 1) 그냥 방 폭파 2) 아무 receiver에게 위임
             chatRoomRepository.deleteById(chatRoomIdx);
@@ -691,8 +694,8 @@ public class AppointmentService {
 
 
         if(userIdx == post.getWriterIdx()){
-            List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPostUser_PostIdxAndStatusAndPosition(postIdx,"active","BUYER");
-            post.setWriterIdx(buyer_prev.get(0).getPostUser().getUserIdx());
+            List<PostParticipant> buyer_prev = postParticipantRepository.findPostParticipantsByPost_PostIdxAndStatusAndPosition(postIdx,"active","BUYER");
+            post.setWriterIdx(buyer_prev.get(0).getUserIdx());
             postRepository.save(post);
         }
     }
@@ -761,9 +764,10 @@ public class AppointmentService {
             );
             postParticipantRepository.save(
                     PostParticipant.builder()
-                            .postUser(new PostUser(post.getPostIdx(),buyer))
+                            .userIdx(buyer)
                             .position("buyer")
                             .status("active")
+                            .post(post)
                             .build()
             );
         }
@@ -783,15 +787,15 @@ public class AppointmentService {
 
     public void drawbackRequest(Long userIdx, Long postIdx) throws BaseException {
        //1. 존재하지 않는지 확인
-        boolean existCheck = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdx(postIdx,userIdx);
+        boolean existCheck = postParticipantRepository.existsByPost_PostIdxAndUserIdx(postIdx,userIdx);
         if(!existCheck){
             throw new BaseException(BaseResponseStatus.INVALID_ACCESS_TO_APPOINTMENT);
         }
-        boolean participantCheck = postParticipantRepository.existsByPostUser_PostIdxAndPostUser_UserIdxAndStatus(postIdx,userIdx,"active");
+        boolean participantCheck = postParticipantRepository.existsByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"active");
         if(participantCheck){
             throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
         }
-        PostParticipant pp = postParticipantRepository.findByPostUser_PostIdxAndPostUser_UserIdxAndStatus(postIdx,userIdx,"waiting");
+        PostParticipant pp = postParticipantRepository.findByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"waiting");
         postParticipantRepository.delete(pp);
     }
 }

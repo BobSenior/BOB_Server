@@ -4,12 +4,13 @@ import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.user.*;
+import com.bob_senior.bob_server.repository.PostParticipantRepository;
+import com.bob_senior.bob_server.repository.PostRepository;
 import com.bob_senior.bob_server.service.AppointmentService;
 import com.bob_senior.bob_server.service.UserService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,21 +22,21 @@ public class UserController {
 
     private final UserService userService;
     private final AppointmentService appointmentService;
+    private final PostParticipantRepository postParticipantRepository;
+    private final PostRepository postRepository;
 
     @Autowired
-    public UserController(UserService userService, AppointmentService appointmentService) {
+    public UserController(UserService userService, AppointmentService appointmentService, PostParticipantRepository postParticipantRepository, PostRepository postRepository) {
         this.userService = userService;
         this.appointmentService = appointmentService;
+        this.postParticipantRepository = postParticipantRepository;
+        this.postRepository = postRepository;
     }
 
-    @RequestMapping("/test")
-    public String testString(){
-        try{
-            return "testpage";
-        }catch (Exception e){
-            log.error(e);
-            return "error";
-        }
+    @GetMapping("/test")
+    public BaseResponse testString(){
+        System.out.println("postRepository = " + postRepository.tete());
+       return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
 

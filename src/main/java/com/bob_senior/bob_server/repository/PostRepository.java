@@ -1,6 +1,7 @@
 package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.Post.entity.Post;
+import com.bob_senior.bob_server.domain.Post.entity.PostParticipant;
 import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
@@ -38,14 +40,30 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     int getMaximumParticipationNumFromPost(@Param("postIdx") Long postIdx);
 
     //activate이면서 + constraint가 ANY or input과 동일한 것들을 가져오기
-    @Query(value = "select p from Post p where p.recruitmentStatus = :status and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)")
-    Page<Post> getAllThatCanParticipant(@Param("status") String status,@Param("dep") String dep,Pageable pageable);
+    @Query(value = "select p from Post p " +
+            "where p.recruitmentStatus = :status" +
+            " and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)" +
+            " and p.meetingDate > :time" +
+            " and not exists" +
+            " (select pp from PostParticipant pp " +
+            "where pp.post.postIdx = p.postIdx and pp.userIdx = :userIdx and pp.status='active')")
+    Page<Post> getAllThatCanParticipant(@Param("status") String status, @Param("dep") String dep, @Param("time")LocalDateTime time,@Param("userIdx") long userIdx, Pageable pageable);
 
-    @Query(value = "select p from Post p where p.recruitmentStatus = 'active' and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) and p.title LIKE %:title%")
-    Page<Post> getAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("title") String title, Pageable pageable);
+    @Query(value = "select p from Post p " +
+            "where p.recruitmentStatus = 'active' " +
+            "and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) " +
+            "and p.meetingDate > :time " +
+            "and p.title LIKE %:title% " +
+            "and not exists " +
+            "(select pp from PostParticipant pp " +
+            "where pp.post.postIdx = p.postIdx " +
+            "and pp.userIdx = :userIdx " +
+            "and pp.status='active')")
+    Page<Post> getAllParticipantThatCanParticipant(@Param("dep") String dep, @Param("title") String title,@Param("time") LocalDateTime now,@Param("userIdx") long userIdx,Pageable pageable);
 
 
-    List<Post> findAllByRecruitmentStatus(String status);
+    @Query(value = "select p from Post p where not exists (select pp from PostParticipant pp where pp.post.postIdx = p.postIdx and pp.userIdx = 1)")
+    List<Post> tete();
 
     Post findPostByWriterIdxAndAndChatRoomIdx(Long writerIdx, Long chatRoomIdx);
 

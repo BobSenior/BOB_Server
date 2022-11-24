@@ -1,11 +1,14 @@
 package com.bob_senior.bob_server.domain.appointment;
 
+import com.bob_senior.bob_server.domain.Post.entity.PostParticipant;
 import com.bob_senior.bob_server.domain.user.SimplifiedUserProfileDTO;
 import com.bob_senior.bob_server.domain.user.UserProfile;
 import lombok.*;
 
+import javax.persistence.OneToMany;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -40,5 +43,8 @@ public class AppointmentHeadDTO {
     private Long waitingNum;
 
     private List<String> tagHeads;
+
+    @OneToMany(mappedBy = "")
+    private List<PostParticipant> participantList = new ArrayList<>();
 
 }
