@@ -1,6 +1,8 @@
 package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.notice.entity.Notice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -23,5 +25,5 @@ public interface NoticeRepository extends JpaRepository<Notice,Long> {
 
     long countByUserIdxAndAndFlag(long userIdx, int flag);
 
-    List<Notice> findAllByUserIdxAndFlag(Long userIdx, int flag);
+    Page<Notice> findAllByUserIdxAndFlag(Long userIdx, int flag, Pageable pageable);
 }

@@ -5,6 +5,7 @@ import com.bob_senior.bob_server.domain.notice.ShownNotice;
 import com.bob_senior.bob_server.domain.notice.entity.Notice;
 import com.bob_senior.bob_server.repository.NoticeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,9 +25,9 @@ public class NoticeService {
         return noticeRepository.countByUserIdxAndAndFlag(userIdx,0);
     }
 
-    public List<ShownNotice> getMyNoticeList(long userIdx) throws BaseException{
+    public List<ShownNotice> getMyNoticeList(long userIdx, Pageable pageable) throws BaseException{
 
-        List<Notice> notices = noticeRepository.findAllByUserIdxAndFlag(userIdx,0);
+        List<Notice> notices = noticeRepository.findAllByUserIdxAndFlag(userIdx,0,pageable).getContent();
         List<ShownNotice> list = new ArrayList<>();
         for (Notice notice : notices) {
             list.add(

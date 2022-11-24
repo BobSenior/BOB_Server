@@ -19,9 +19,11 @@ import com.bob_senior.bob_server.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -248,8 +250,8 @@ public class AppointmentService {
 
 
 
-    public void
-    makeNewPostParticipation(Long postIdx, Long userIdx,String position) throws BaseException{
+    @Transactional
+    public void makeNewPostParticipation(Long postIdx, Long userIdx,String position) throws BaseException{
         //1. 일단 방이 존재하는지 확인
         boolean exist = postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"active");
         if(!exist) throw new BaseException(BaseResponseStatus.NON_EXIST_POSTIDX);
@@ -328,6 +330,7 @@ public class AppointmentService {
 
 
 
+    @Transactional
     public void determineRequestStatus(Long postIdx, Long requesterIdx, boolean accept) throws BaseException{
         //1. 해당 request가 존재했는지 확인하는게 우선
         boolean isExist = postParticipantRepository.existsByPost_PostIdxAndUserIdx(postIdx,requesterIdx);
@@ -374,6 +377,7 @@ public class AppointmentService {
                         .build()
         );
     }
+
 
 
 
@@ -434,6 +438,7 @@ public class AppointmentService {
 
 
 
+    @Transactional
     //해당 postIdx로 uuid의 유저를 초대
     public void inviteUserByUUID(String invitedUUID, Long postIdx) throws BaseException{
         //일단 postIdx에 참여 가능여부를 확인
@@ -552,6 +557,7 @@ public class AppointmentService {
         return heads;
     }
 
+    @Transactional
     public List<AppointmentHeadDTO> searchByTag(Long userIdx, String tag, Pageable pageable) throws BaseException{
         //1. tag의 존재 여부
         boolean isExist = postTagRepository.existsByTagContent(tag);
@@ -606,6 +612,7 @@ public class AppointmentService {
         return heads;
     }
 
+    @Transactional
     public PostViewDTO getPostData(Long roomIdx,Long userIdx) throws BaseException{
         //해당 post의 데이터 싸그리 가져오기
         Post post = postRepository.findPostByPostIdx(roomIdx);
@@ -667,6 +674,7 @@ public class AppointmentService {
         return postParticipantRepository.existsByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"active");
     }
 
+    @Transactional
     public void exitAppointment(long postIdx, long userIdx) throws BaseException {
         //해당 post에서 나가기
         //1. 일단 postParticipant에서 제거
@@ -714,9 +722,12 @@ public class AppointmentService {
         );
     }
 
+    @Transactional
     public void makeNewPost(MakeNewPostReqDTO makeNewPostReqDTO) throws BaseException{
-
-        if(makeNewPostReqDTO.getMeetingAt().isBefore(LocalDateTime.now())){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        System.out.println("makeNewPostReqDTO = " + makeNewPostReqDTO.getMeetingAt());
+        LocalDateTime time = LocalDateTime.parse(makeNewPostReqDTO.getMeetingAt(),formatter);
+        if(time.isBefore(LocalDateTime.now())){
             throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
         }
 
@@ -740,7 +751,7 @@ public class AppointmentService {
                         .recruitmentStatus("active")
                         .registeredAt(Timestamp.valueOf(LocalDateTime.now()))
                         .viewCount(0)
-                        .meetingDate(makeNewPostReqDTO.getMeetingAt())
+                        .meetingDate(time)
                         .meetingType(makeNewPostReqDTO.getType())
                         .participantLimit(makeNewPostReqDTO.getReceiverNum() + makeNewPostReqDTO.getBuyerNum())
                         .participantConstraint(makeNewPostReqDTO.getConstraint())
@@ -750,37 +761,52 @@ public class AppointmentService {
 
         Post post = postRepository.findPostByWriterIdxAndAndChatRoomIdx(makeNewPostReqDTO.getWriterIdx(), chatRoom.getChatRoomIdx());
 
+        //writer postParticipant만들기.. 이거 왜 안만듬ㅅㅂ
+        postParticipantRepository.save(
+                PostParticipant.builder()
+                        .userIdx(makeNewPostReqDTO.getWriterIdx())
+                        .status("active")
+                        .position(makeNewPostReqDTO.getWriterPosition())
+                        .post(post)
+                        .build()
+        );
 
-        //2. 이후 participant만들기 - chat하고 post둘다
-        List<Long> buyers = makeNewPostReqDTO.getInvitedIdx();
-        buyers.add(makeNewPostReqDTO.getWriterIdx());
-        for (Long buyer : buyers) {
-            if (!userRepository.existsUserByUserIdx(buyer)) throw new BaseException(BaseResponseStatus.INVALID_USER);
-            chatParticipantRepository.save(
-                    ChatParticipant.builder()
-                            .chatNUser(new ChatNUser(chatRoom.getChatRoomIdx(), buyer))
-                            .status("active")
-                            .build()
-            );
-            postParticipantRepository.save(
-                    PostParticipant.builder()
-                            .userIdx(buyer)
-                            .position("buyer")
-                            .status("active")
-                            .post(post)
-                            .build()
-            );
+
+        if(makeNewPostReqDTO.getInvitedIdx() != null) {
+            //2. 이후 participant만들기 - chat하고 post둘다
+            List<Long> buyers = makeNewPostReqDTO.getInvitedIdx();
+            buyers.add(makeNewPostReqDTO.getWriterIdx());
+            for (Long buyer : buyers) {
+                if (!userRepository.existsUserByUserIdx(buyer))
+                    throw new BaseException(BaseResponseStatus.INVALID_USER);
+                chatParticipantRepository.save(
+                        ChatParticipant.builder()
+                                .chatNUser(new ChatNUser(chatRoom.getChatRoomIdx(), buyer))
+                                .status("active")
+                                .build()
+                );
+                postParticipantRepository.save(
+                        PostParticipant.builder()
+                                .userIdx(buyer)
+                                .position("buyer")
+                                .status("active")
+                                .post(post)
+                                .build()
+                );
+            }
         }
 
-        //3. 태그들 싹 추가하기
-        List<String> tags = makeNewPostReqDTO.getTags();
-        for (String tag : tags) {
-            postTagRepository.save(
-                    PostTag.builder()
-                            .tagContent(tag)
-                            .post(post)
-                            .build()
-            );
+        if(makeNewPostReqDTO.getTags()!=null) {
+            //3. 태그들 싹 추가하기
+            List<String> tags = makeNewPostReqDTO.getTags();
+            for (String tag : tags) {
+                postTagRepository.save(
+                        PostTag.builder()
+                                .tagContent(tag)
+                                .post(post)
+                                .build()
+                );
+            }
         }
 
     }
