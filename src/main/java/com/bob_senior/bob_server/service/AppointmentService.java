@@ -16,6 +16,7 @@ import com.bob_senior.bob_server.domain.vote.ShownVoteRecord;
 import com.bob_senior.bob_server.domain.vote.entity.Vote;
 import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
+import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -104,7 +105,7 @@ public class AppointmentService {
 
         for (VoteRecord voteRecord : vr) {
             records.add(
-                    ShownVoteRecord.builder().content(voteRecord.getVoteContent()).count(voteRecord.getCount()).build()
+                    ShownVoteRecord.builder().id(voteRecord.getVoteId().getChoiceIdx()).content(voteRecord.getVoteContent()).count(voteRecord.getCount()).build()
             );
         }
 
@@ -113,6 +114,8 @@ public class AppointmentService {
 
         if(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1) == null){
             return AppointmentViewDTO.builder()
+                    .constraint(post.getParticipantConstraint())
+                    .title(post.getTitle())
                     .postIdx(post.getPostIdx())
                     .location(post.getPlace())
                     .meetingAt(post.getMeetingDate())
@@ -123,6 +126,9 @@ public class AppointmentService {
         }
 
         return AppointmentViewDTO.builder()
+                .constraint(post.getParticipantConstraint())
+                .voteIdx(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getVoteIdx())
+                .title(post.getTitle())
                 .postIdx(post.getPostIdx())
                 .location(post.getPlace())
                 .meetingAt(post.getMeetingDate())
@@ -725,12 +731,13 @@ public class AppointmentService {
     @Transactional
     public void makeNewPost(MakeNewPostReqDTO makeNewPostReqDTO) throws BaseException{
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        System.out.println("makeNewPostReqDTO = " + makeNewPostReqDTO.getMeetingAt());
-        LocalDateTime time = LocalDateTime.parse(makeNewPostReqDTO.getMeetingAt(),formatter);
-        if(time.isBefore(LocalDateTime.now())){
-            throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
+        LocalDateTime time = null;
+        if(makeNewPostReqDTO.getMeetingAt() != null) {
+            time = LocalDateTime.parse(makeNewPostReqDTO.getMeetingAt(), formatter);
+            if (time.isBefore(LocalDateTime.now())) {
+                throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
+            }
         }
-
         //0. chatroom을 먼저 만들어야 될듯 -> 채팅방 생성
         String uuid = UUID.randomUUID().toString();
         chatRoomRepository.save(

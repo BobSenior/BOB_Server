@@ -19,13 +19,19 @@ public class AppointmentViewDTO {
 
     private Long postIdx;
 
+    private String title;
+
     private String location;
+
+    private String constraint;
 
     private LocalDateTime meetingAt;
 
     private List<SimplifiedUserProfileDTO> buyers;
 
     private List<SimplifiedUserProfileDTO> receivers;
+
+    private Long voteIdx;
 
     private String voteTitle;
 
