@@ -19,6 +19,8 @@ public class AppointmentViewDTO {
 
     private Long postIdx;
 
+    private Long writerIdx;
+
     private String title;
 
     private String location;
@@ -29,7 +31,11 @@ public class AppointmentViewDTO {
 
     private List<SimplifiedUserProfileDTO> buyers;
 
+    private Integer maxBuyerNum;
+
     private List<SimplifiedUserProfileDTO> receivers;
+
+    private Integer maxReceiverNum;
 
     private Long voteIdx;
 

@@ -59,6 +59,7 @@ public class ChatService {
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
         long chatRoomIdx = postRepository.findPostByPostIdx(chatIdx).getChatRoomIdx();
+        System.out.println("chatRoomIdx = " + chatRoomIdx);
         boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatRoomIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false

@@ -16,7 +16,6 @@ import com.bob_senior.bob_server.domain.vote.ShownVoteRecord;
 import com.bob_senior.bob_server.domain.vote.entity.Vote;
 import com.bob_senior.bob_server.domain.vote.entity.VoteRecord;
 import com.bob_senior.bob_server.repository.*;
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,9 +42,12 @@ public class AppointmentService {
     private final VoteRepository voteRepository;
     private final VoteParticipatedRepository voteParticipatedRepository;
     private final NoticeRepository noticeRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatRepository chatRepository;
+
 
     @Autowired
-    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository, PostTagRepository postTagRepository, ChatRoomRepository chatRoomRepository, VoteRecordRepository voteRecordRepository, VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, NoticeRepository noticeRepository) {
+    public AppointmentService(PostRepository postRepository, PostParticipantRepository postParticipantRepository, UserRepository userRepository, ChatParticipantRepository chatParticipantRepository, PostPhotoRepository postPhotoRepository, PostTagRepository postTagRepository, ChatRoomRepository chatRoomRepository, VoteRecordRepository voteRecordRepository, VoteRepository voteRepository, VoteParticipatedRepository voteParticipatedRepository, NoticeRepository noticeRepository, ChatMessageRepository chatMessageRepository, ChatRepository chatRepository) {
         this.postRepository = postRepository;
         this.postParticipantRepository = postParticipantRepository;
         this.userRepository = userRepository;
@@ -57,6 +59,8 @@ public class AppointmentService {
         this.voteRepository = voteRepository;
         this.voteParticipatedRepository = voteParticipatedRepository;
         this.noticeRepository = noticeRepository;
+        this.chatMessageRepository = chatMessageRepository;
+        this.chatRepository = chatRepository;
     }
 
 
@@ -100,13 +104,16 @@ public class AppointmentService {
 
         Vote vote = voteRepository.getVoteByPostIdx(postIdx);
 
-        List<VoteRecord> vr = voteRecordRepository.findAllByVoteId_VoteIdx(vote.getVoteIdx());
         List<ShownVoteRecord> records = new ArrayList<>();
+        if(vote!=null) {
 
-        for (VoteRecord voteRecord : vr) {
-            records.add(
-                    ShownVoteRecord.builder().id(voteRecord.getVoteId().getChoiceIdx()).content(voteRecord.getVoteContent()).count(voteRecord.getCount()).build()
-            );
+            List<VoteRecord> vr = voteRecordRepository.findAllByVoteId_VoteIdx(vote.getVoteIdx());
+
+            for (VoteRecord voteRecord : vr) {
+                records.add(
+                        ShownVoteRecord.builder().id(voteRecord.getVoteId().getChoiceIdx()).content(voteRecord.getVoteContent()).count(voteRecord.getCount()).build()
+                );
+            }
         }
 
         //해당 post에 달린 모든 notice를 해제시킨다
@@ -114,10 +121,13 @@ public class AppointmentService {
 
         if(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1) == null){
             return AppointmentViewDTO.builder()
+                    .writerIdx(post.getWriterIdx())
                     .constraint(post.getParticipantConstraint())
                     .title(post.getTitle())
                     .postIdx(post.getPostIdx())
                     .location(post.getPlace())
+                    .maxBuyerNum(post.getMaxBuyerNum())
+                    .maxReceiverNum(post.getMaxReceiverNum())
                     .meetingAt(post.getMeetingDate())
                     .buyers(buyer)
                     .receivers(receiver)
@@ -126,11 +136,14 @@ public class AppointmentService {
         }
 
         return AppointmentViewDTO.builder()
+                .writerIdx(post.getWriterIdx())
                 .constraint(post.getParticipantConstraint())
                 .voteIdx(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getVoteIdx())
                 .title(post.getTitle())
                 .postIdx(post.getPostIdx())
                 .location(post.getPlace())
+                .maxBuyerNum(post.getMaxBuyerNum())
+                .maxReceiverNum(post.getMaxReceiverNum())
                 .meetingAt(post.getMeetingDate())
                 .buyers(buyer)
                 .receivers(receiver)
@@ -266,15 +279,23 @@ public class AppointmentService {
         boolean already_participated = postParticipantRepository.existsByPost_PostIdxAndUserIdx(postIdx,userIdx);
         if(already_participated) throw new BaseException(BaseResponseStatus.ALREADY_PARTICIPATED_IN_ROOM);
 
-        //3. 이미 만료된(풀방, finished)인지 확인
-        Long cur_participation_count = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
+        //3. 이미 만료된(풀방, finished)인지 확인 -> 포지션별로 해야될듯..
+        Long cur_participation_count = postParticipantRepository.countByPost_PostIdxAndPositionAndStatus(postIdx,position,"active");
         Post p = postRepository.findPostByPostIdx(postIdx);
-        if(cur_participation_count>=p.getParticipantLimit()
-                || p.getRecruitmentStatus() == "FINISHED"){
-            //이미 풀방 || recruitmentStatus가 이미 완료시 더이상 참여 불가능
-            throw new BaseException(BaseResponseStatus.UNABLE_TO_MAKE_REQUEST_IN_POST);
+        if(position.equals("buyer")){
+            if(cur_participation_count>=p.getMaxBuyerNum()
+                    || p.getRecruitmentStatus() == "FINISHED"){
+                //이미 풀방 || recruitmentStatus가 이미 완료시 더이상 참여 불가능
+                throw new BaseException(BaseResponseStatus.UNABLE_TO_MAKE_REQUEST_IN_POST);
+            }
         }
-
+        else{
+            if(cur_participation_count>=p.getMaxReceiverNum()
+                    || p.getRecruitmentStatus() == "FINISHED"){
+                //이미 풀방 || recruitmentStatus가 이미 완료시 더이상 참여 불가능
+                throw new BaseException(BaseResponseStatus.UNABLE_TO_MAKE_REQUEST_IN_POST);
+            }
+        }
         //4. 위의 verification 을 모두 통과시 participation 을 추가하기
         postParticipantRepository.save(PostParticipant.builder()
                 .userIdx(userIdx)
@@ -446,12 +467,17 @@ public class AppointmentService {
 
     @Transactional
     //해당 postIdx로 uuid의 유저를 초대
-    public void inviteUserByUUID(String invitedUUID, Long postIdx) throws BaseException{
+    public void inviteUserByUUID(String invitedUUID, Long postIdx,String position) throws BaseException{
         //일단 postIdx에 참여 가능여부를 확인
         Post post = postRepository.findPostByPostIdx(postIdx);
-        int total = post.getParticipantLimit();
+        int total = 0;
+        if(position.equals("buyer")){
+            total = post.getMaxBuyerNum();
+        }
+        else total = post.getMaxReceiverNum();
+
         //현재 참여중인 user의 수
-        long curr = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
+        long curr = postParticipantRepository.countByPost_PostIdxAndPositionAndStatus(postIdx,position,"active").intValue();
 
         //더이상 참여가 불가능한 경우
         if(total - curr <=0){
@@ -475,8 +501,7 @@ public class AppointmentService {
                 .userIdx(user.getUserIdx())
                 .status("active")
                 .post(post)
-                //TODO : position변동 설정
-                        .position("buyer")
+                .position(position)
                 .build()
         );
 
@@ -484,7 +509,7 @@ public class AppointmentService {
        chatParticipantRepository.save(
                 ChatParticipant.builder()
                         .chatNUser(new ChatNUser(post.getChatRoomIdx(), user.getUserIdx()))
-                        .status("A")
+                        .status("active")
                         .build()
        );
 
@@ -677,13 +702,15 @@ public class AppointmentService {
     }
 
     public boolean checkIfUserParticipating(long postIdx, long userIdx) {
+        System.out.println("postIdx = " + postIdx);
+        System.out.println("userIdx = " + userIdx);
         return postParticipantRepository.existsByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"active");
     }
 
     @Transactional
     public void exitAppointment(long postIdx, long userIdx) throws BaseException {
         //해당 post에서 나가기
-        //1. 일단 postParticipant에서 제거
+        //1. 일단 postParticipant에서 제거, 그전에 포지션부터 가져오자
         postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx, userIdx);
         Post post = postRepository.findPostByPostIdx(postIdx);
         Long chatRoomIdx = post.getChatRoomIdx();
@@ -692,9 +719,8 @@ public class AppointmentService {
         //2. 해당 user의 이탈로 만약 더이상 참여 인원이 없을시 -> post와 chatroom을 제거
         long remains = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
         if(remains == 0){
-            //제거
-            chatRoomRepository.deleteById(chatRoomIdx);
-            postRepository.deleteById(postIdx);
+            //TODO : 제거로직 확실히 하기!!
+            deleteEntirePost(postIdx);
         }
         //3. 해당 유저가 post의 주인일 경우? 아무 buyer에게 owner권한을 넘기자
         //만약 buyer가 없다면?.... 방을 터트리는게 맞지 않을까
@@ -702,8 +728,8 @@ public class AppointmentService {
         long remains_buyer = postParticipantRepository.countByPost_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
         if(remains_buyer == 0){
             //TODO : buyer가 전부 나간 상황에서 어찌처리할지 결정 해야함 1) 그냥 방 폭파 2) 아무 receiver에게 위임
-            chatRoomRepository.deleteById(chatRoomIdx);
-            postRepository.deleteById(postIdx);
+            deleteEntirePost(postIdx);
+            return;
         }
 
 
@@ -755,6 +781,8 @@ public class AppointmentService {
                         .title(makeNewPostReqDTO.getTitle())
                         .place(makeNewPostReqDTO.getLocation())
                         .content(makeNewPostReqDTO.getContent())
+                        .maxBuyerNum(makeNewPostReqDTO.getBuyerNum())
+                        .maxReceiverNum(makeNewPostReqDTO.getReceiverNum())
                         .recruitmentStatus("active")
                         .registeredAt(Timestamp.valueOf(LocalDateTime.now()))
                         .viewCount(0)
@@ -778,6 +806,13 @@ public class AppointmentService {
                         .build()
         );
 
+        chatParticipantRepository.save(
+                ChatParticipant.builder()
+                        .chatNUser(new ChatNUser(chatRoom.getChatRoomIdx(), makeNewPostReqDTO.getWriterIdx()))
+                        .status("active")
+                        .build()
+        );
+
 
         if(makeNewPostReqDTO.getInvitedIdx() != null) {
             //2. 이후 participant만들기 - chat하고 post둘다
@@ -786,6 +821,7 @@ public class AppointmentService {
             for (Long buyer : buyers) {
                 if (!userRepository.existsUserByUserIdx(buyer))
                     throw new BaseException(BaseResponseStatus.INVALID_USER);
+                System.out.println("chatRoom.getChatRoomIdx() = " + chatRoom.getChatRoomIdx());
                 chatParticipantRepository.save(
                         ChatParticipant.builder()
                                 .chatNUser(new ChatNUser(chatRoom.getChatRoomIdx(), buyer))
@@ -831,6 +867,28 @@ public class AppointmentService {
         PostParticipant pp = postParticipantRepository.findByPost_PostIdxAndUserIdxAndStatus(postIdx,userIdx,"waiting");
         postParticipantRepository.delete(pp);
     }
+
+    private boolean deleteEntirePost(long postIdx){
+        Post post = postRepository.findPostByPostIdx(postIdx);
+        //chatRoom착제 prev
+        chatParticipantRepository.deleteAllParticipationInChatroom(post.getChatRoomIdx());
+        chatMessageRepository.deleteAllByChatRoom_ChatRoomIdx(post.getChatRoomIdx());
+        chatRepository.deleteAllByChatRoom_ChatRoomIdx(post.getChatRoomIdx());
+        postPhotoRepository.deleteAllByPost(post);
+        postTagRepository.deleteAllByPost(post);
+
+        List<Vote> vr_list = voteRepository.findAllByPostIdx(postIdx);
+        for (Vote vote : vr_list) {
+            voteParticipatedRepository.deleteAllByVote(vote);
+            voteRecordRepository.deleteAllByVoteId_VoteIdx(vote.getVoteIdx());
+            voteRepository.deleteById(vote.getVoteIdx());
+        }
+
+        postParticipantRepository.deleteAllParticipantInPost(postIdx);
+        postRepository.delete(post);
+        return true;
+    }
 }
+
 
 

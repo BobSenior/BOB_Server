@@ -17,4 +17,5 @@ public interface VoteRecordRepository extends JpaRepository<VoteRecord, Long> {
 
     @Transactional
     void deleteAllByVoteId_VoteIdx(long voteIdx);
+
 }

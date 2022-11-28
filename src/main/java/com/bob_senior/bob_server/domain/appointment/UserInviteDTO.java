@@ -10,4 +10,6 @@ public class UserInviteDTO {
     private Long inviterIdx;
 
     private String invitedUUID;
+
+    private String position;
 }
