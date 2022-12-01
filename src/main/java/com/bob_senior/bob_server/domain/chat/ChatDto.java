@@ -9,7 +9,10 @@ import lombok.*;
 @Builder
 public class ChatDto {
 
-    private String type;
+    /**
+     * nickname, data, Timestamp(적힌시간)
+     */
+
     private Long senderIdx;
     private String data;
 
@@ -17,12 +20,5 @@ public class ChatDto {
 
     }
 
-    public void newConnect(){
-        this.type = "new";
-    }
-
-    public void closeConnect(){
-        this.type = "close";
-    }
 
 }

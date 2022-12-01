@@ -709,6 +709,7 @@ public class AppointmentService {
 
     @Transactional
     public void exitAppointment(long postIdx, long userIdx) throws BaseException {
+        System.out.println("hello = " + postIdx);
         //해당 post에서 나가기
         //1. 일단 postParticipant에서 제거, 그전에 포지션부터 가져오자
         postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx, userIdx);
@@ -721,6 +722,7 @@ public class AppointmentService {
         if(remains == 0){
             //TODO : 제거로직 확실히 하기!!
             deleteEntirePost(postIdx);
+            return;
         }
         //3. 해당 유저가 post의 주인일 경우? 아무 buyer에게 owner권한을 넘기자
         //만약 buyer가 없다면?.... 방을 터트리는게 맞지 않을까
@@ -728,7 +730,7 @@ public class AppointmentService {
         long remains_buyer = postParticipantRepository.countByPost_PostIdxAndStatusAndPosition(postIdx,"active","buyer");
         if(remains_buyer == 0){
             //TODO : buyer가 전부 나간 상황에서 어찌처리할지 결정 해야함 1) 그냥 방 폭파 2) 아무 receiver에게 위임
-            deleteEntirePost(postIdx);
+            deleteEntirePost(post.getPostIdx());
             return;
         }
 
@@ -869,7 +871,9 @@ public class AppointmentService {
     }
 
     private boolean deleteEntirePost(long postIdx){
+        System.out.println("postIdxssss = " + postIdx);
         Post post = postRepository.findPostByPostIdx(postIdx);
+        System.out.println("post = " + post);
         //chatRoom착제 prev
         chatParticipantRepository.deleteAllParticipationInChatroom(post.getChatRoomIdx());
         chatMessageRepository.deleteAllByChatRoom_ChatRoomIdx(post.getChatRoomIdx());

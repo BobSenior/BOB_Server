@@ -4,6 +4,7 @@ import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.chat.ChatDto;
 import com.bob_senior.bob_server.domain.chat.ChatPage;
 import com.bob_senior.bob_server.domain.chat.SessionAndClientRecord;
+import com.bob_senior.bob_server.domain.chat.ShownChat;
 import com.bob_senior.bob_server.domain.chat.entity.SessionRecord;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
@@ -69,7 +70,6 @@ public class ChatController {
             return new BaseResponse<>(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
         Timestamp ts = chatService.userParticipant(roomIdx,userIdx);
-        msg.setType("INIT");
         String nickname = userService.getNickNameByIdx(msg.getSenderIdx());
         msg.setData(nickname + " 님이 입장하셨습니다!");
         return new BaseResponse<ChatDto>(msg);
@@ -82,8 +82,6 @@ public class ChatController {
     @MessageMapping("/stomp/{roomIdx}")
     @SendTo("/topic/room/{roomIdx}")
     public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable Long roomIdx){
-        System.out.println("catch");
-        //verify_if_chatroom_exist(roomId);
         Long user = msg.getSenderIdx();
         if(!userService.checkUserExist(user)){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
@@ -96,9 +94,9 @@ public class ChatController {
         Timestamp timeStamp = new Timestamp(nowDate);
 
         //채팅 db에 저장
-        chatService.storeNewMessage(msg,timeStamp,roomIdx);
+        ShownChat shownChat = chatService.storeNewMessage(msg,timeStamp,roomIdx);
 
-        return new BaseResponse<ChatDto>(msg);
+        return new BaseResponse<ShownChat>(shownChat);
     }
 
 
@@ -116,7 +114,6 @@ public class ChatController {
         }
         ChatDto msg = new ChatDto();
         msg.setSenderIdx(sender);
-        msg.setType("EXIT");
         //해당 sender유저 채팅방 데이터에서 제거\
         chatService.deleteUserFromRoom(roomId, sender);
         String senderNick = userService.getNickNameByIdx(sender);

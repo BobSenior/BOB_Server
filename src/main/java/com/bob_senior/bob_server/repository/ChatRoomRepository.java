@@ -7,4 +7,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom,Long> {
 
     ChatRoom findChatRoomByChatRoomName(String name);
 
+    ChatRoom findChatRoomByChatRoomIdx(long roomIdx);
+
 }
