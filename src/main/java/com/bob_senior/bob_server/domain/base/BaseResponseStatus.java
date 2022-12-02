@@ -58,7 +58,6 @@ public enum BaseResponseStatus {
     SIGNUP_EMPTY_USER_NICKNAME(false,4001, "닉네임을 입력해주세요." ),
     SIGNUP_INVALID_USER_NICKNAME(false,4002, "닉네임은 영어 또는 한글과 숫자를 조합한 2-10 자리만 가능합니다." ),
     SIGNUP_ALREADY_EXIST_NICKNAME(false, 4003, "이미 사용중인 닉네임입니다."),
-    SIGNUP_ALREADY_EXIST_Id(false, 4004, "이미 사용중인 아이디입니다."),
     LOGIN_INFO_NOT_MATCH(false, 5004, "아이디 비밀번호를 다시 확인해주세요."),
 
     SIGNUP_EMPTY_USER_ID(false, 5005, "아이디를 입력해주세요."),

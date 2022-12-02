@@ -210,7 +210,7 @@ public class UserService {
 
         String subject = "밥선배 인증메일";
 
-        String body = "하단의 링크를 클릭하시면 인증이 완료됩니다!\r\n" + "http://localhost:8080/confirm-mail/?email="+emailAuth.getEmail() + "&authToken="+emailAuth.getAuthToken();
+        String body = "하단의 링크를 클릭하시면 인증이 완료됩니다!\r\n" + "https://bobsenior.co.kr/confirm-mail/?email="+emailAuth.getEmail() + "&authToken="+emailAuth.getAuthToken();
 
         mailService.sendEmail(createUserReqDTO.getEmail(), addr, subject, body);
         //이메일 보내기
@@ -244,21 +244,21 @@ public class UserService {
             return new CheckNicknameResDTO(false, "사용 가능한 아이디입니다.");
         } else {
             log.error("ILLEGAL_ARG_ERROR when call UserRepository.checkNickname() because nickname is already used");
-            throw new BaseException(SIGNUP_ALREADY_EXIST_Id);
+            throw new BaseException(SIGNUP_ALREADY_EXIST_ID);
 
         }
     }
 
     public LoginResDTO loginUser(LoginReqDTO loginReqDTO) throws BaseException{
+        boolean idAndPwExist = userRepository.existsByUserIdAndPassword(loginReqDTO.getUserId(), loginReqDTO.getPassword());
+        if(idAndPwExist == false) {
+            throw new BaseException(LOGIN_INFO_NOT_MATCH);
+        }
+
         User user = userRepository.findByUserIdAndPassword(loginReqDTO.getUserId(), loginReqDTO.getPassword());
 
         if(user.getAuthorizedStatus().equals("I")){
             throw new BaseException(EMAIL_NOT_AUTHORIZED);
-        }
-
-        //만약 ID와 PW가 일치하지 않는다면
-        if(user == null){
-            throw new BaseException(LOGIN_INFO_NOT_MATCH);
         }
 
         // JWT !!!!!
