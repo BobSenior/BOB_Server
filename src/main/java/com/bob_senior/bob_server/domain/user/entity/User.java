@@ -1,7 +1,7 @@
 package com.bob_senior.bob_server.domain.user.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.TypeAlias;
 
 import javax.persistence.*;
@@ -11,14 +11,19 @@ import java.sql.Timestamp;
 @Getter
 @Setter
 @Table(name = "User")
+@DynamicInsert
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @Column(name = "userIdx")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userIdx;
 
     @Column(name = "userId")
-    private String usrId;
+    private String userId;
 
     @Column(name = "password")
     private String password;
@@ -55,4 +60,5 @@ public class User {
 
     @Column
     private String school;
+
 }

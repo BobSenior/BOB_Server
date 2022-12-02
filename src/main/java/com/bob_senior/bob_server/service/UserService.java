@@ -2,35 +2,48 @@ package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
+import com.bob_senior.bob_server.domain.email.entity.EmailAuth;
 import com.bob_senior.bob_server.domain.notice.entity.Notice;
 import com.bob_senior.bob_server.domain.user.*;
 import com.bob_senior.bob_server.domain.user.entity.*;
 import com.bob_senior.bob_server.repository.BlockRepository;
 import com.bob_senior.bob_server.repository.FriendshipRepository;
-import com.bob_senior.bob_server.repository.NoticeRepository;
+import com.bob_senior.bob_server.repository.EmailAuthRepository;
 import com.bob_senior.bob_server.repository.UserRepository;
+import com.bob_senior.bob_server.repository.NoticeRepository;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static com.bob_senior.bob_server.domain.base.BaseResponseStatus.*;
 
 @Service
+@Log4j2
 public class UserService {
 
     private final UserRepository userRepository;
     private final BlockRepository blockRepository;
     private final FriendshipRepository friendshipRepository;
+    private final EmailAuthRepository emailAuthRepository;
+    private final MailService mailService;
     private final NoticeRepository noticeRepository;
+    private final JwtService jwtService;
 
     @Autowired
-    UserService(UserRepository userRepository, BlockRepository blockRepository, FriendshipRepository friendshipRepository, NoticeRepository noticeRepository){
+    UserService(UserRepository userRepository, BlockRepository blockRepository, FriendshipRepository friendshipRepository, EmailAuthRepository emailAuthRepository, MailService mailService,
+                NoticeRepository noticeRepository, JwtService jwtService){
         this.userRepository = userRepository;
         this.blockRepository = blockRepository;
-
-        this.friendshipRepository = friendshipRepository;
+        this.emailAuthRepository = emailAuthRepository;
+        this.mailService = mailService;
         this.noticeRepository = noticeRepository;
+        this.friendshipRepository = friendshipRepository;
+        this.jwtService = jwtService;
     }
 
     public boolean checkUserExist(Long userIdx){
@@ -155,7 +168,6 @@ public class UserService {
                         .build()
         );
     }
-
     public List<SimplifiedUserProfileDTO> getFriendList(long userIdx, Pageable pageable)  throws BaseException {
 
         List<Friendship> list = friendshipRepository.getFriendList(userIdx,pageable).getContent();
@@ -172,5 +184,98 @@ public class UserService {
             );
         }
         return userProfileDTOList;
+    }
+
+    public CreateUserResDTO registerUser(CreateUserReqDTO createUserReqDTO){
+        User user = User.builder().department(createUserReqDTO.getDepartment())
+                .email(createUserReqDTO.getEmail())
+                .password(createUserReqDTO.getPassword())
+                .nickName(createUserReqDTO.getNickName())
+                .school(createUserReqDTO.getSchool())
+                .schoolId(createUserReqDTO.getSchoolId())
+                .imageURL("BobSenior")
+                .userId(createUserReqDTO.getUserId())
+                .uuid(UUID.randomUUID().toString())
+                .department(createUserReqDTO.getDepartment())
+                .build();
+
+        userRepository.save(user);
+
+        EmailAuth emailAuth = new EmailAuth(createUserReqDTO.getEmail(),UUID.randomUUID().toString(),"false");
+
+        emailAuthRepository.save(emailAuth);
+        // 사용자 생성
+        String addr = "bobseniorcs@gmail.com";
+
+
+        String subject = "밥선배 인증메일";
+
+        String body = "하단의 링크를 클릭하시면 인증이 완료됩니다!\r\n" + "http://localhost:8080/confirm-mail/?email="+emailAuth.getEmail() + "&authToken="+emailAuth.getAuthToken();
+
+        mailService.sendEmail(createUserReqDTO.getEmail(), addr, subject, body);
+        //이메일 보내기
+
+        return new CreateUserResDTO("이메일에서 회원가입을 마무리 해주세요.");
+    }
+
+    public CheckNicknameResDTO checkNickname(String nickname) throws BaseException{
+
+        boolean isNicknameExisted = false;
+        try {
+            isNicknameExisted = userRepository.existsByNickName(nickname);
+        } catch (Exception e) {
+            log.error("DATABASE_ERROR when call UserRepository.checkNickname()");
+        }
+
+        if (isNicknameExisted == false) {
+            return new CheckNicknameResDTO(false, "사용 가능한 닉네임입니다.");
+        } else {
+            log.error("ILLEGAL_ARG_ERROR when call UserRepository.checkNickname() because nickname is already used");
+            throw new BaseException(SIGNUP_ALREADY_EXIST_NICKNAME);
+
+        }
+    }
+
+    public CheckNicknameResDTO checkId(String id) throws BaseException{
+        boolean isIdExisted = false;
+        isIdExisted = userRepository.existsByUserId(id);
+
+        if (isIdExisted == false) {
+            return new CheckNicknameResDTO(false, "사용 가능한 아이디입니다.");
+        } else {
+            log.error("ILLEGAL_ARG_ERROR when call UserRepository.checkNickname() because nickname is already used");
+            throw new BaseException(SIGNUP_ALREADY_EXIST_Id);
+
+        }
+    }
+
+    public LoginResDTO loginUser(LoginReqDTO loginReqDTO) throws BaseException{
+        User user = userRepository.findByUserIdAndPassword(loginReqDTO.getUserId(), loginReqDTO.getPassword());
+
+        if(user.getAuthorizedStatus().equals("I")){
+            throw new BaseException(EMAIL_NOT_AUTHORIZED);
+        }
+
+        //만약 ID와 PW가 일치하지 않는다면
+        if(user == null){
+            throw new BaseException(LOGIN_INFO_NOT_MATCH);
+        }
+
+        // JWT !!!!!
+        String jwtAccessToken = jwtService.createAccessToken(Math.toIntExact(user.getUserIdx()));
+        String jwtRefreshToken = jwtService.createRefreshToken(Math.toIntExact(user.getUserIdx()));
+
+
+        return new LoginResDTO(
+                "로그인에 성공하였습니다.",
+                Math.toIntExact(user.getUserIdx()),
+                user.getNickName(),
+                user.getUuid(),
+                user.getSchoolId(),
+                user.getDepartment(),
+                user.getImageURL(),
+                jwtAccessToken,
+                jwtRefreshToken
+        );
     }
 }
