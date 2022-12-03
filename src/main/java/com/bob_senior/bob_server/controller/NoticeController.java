@@ -8,6 +8,7 @@ import com.bob_senior.bob_server.domain.user.UserIdxDTO;
 import com.bob_senior.bob_server.service.NoticeService;
 import com.bob_senior.bob_server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,12 +43,12 @@ public class NoticeController {
     }
 
     @GetMapping("/notice/list")
-    public BaseResponse getMyNoticeList(@RequestParam Long userIdx){
+    public BaseResponse getMyNoticeList(@RequestParam Long userIdx, Pageable pageable){
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
         try{
-            List<ShownNotice> list = noticeService.getMyNoticeList(userIdx);
+            List<ShownNotice> list = noticeService.getMyNoticeList(userIdx,pageable);
             return new BaseResponse(list);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());

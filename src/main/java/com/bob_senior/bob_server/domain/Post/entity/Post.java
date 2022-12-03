@@ -61,6 +61,12 @@ public class Post {
     @OneToMany(mappedBy = "post")
     private List<PostParticipant> participantList = new ArrayList<>();
 
+    @Column
+    private Integer maxBuyerNum;
+
+    @Column
+    private Integer maxReceiverNum;
+
     public boolean contains(){
         return false;
     }

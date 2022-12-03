@@ -22,6 +22,8 @@ public interface PostParticipantRepository extends JpaRepository<PostParticipant
 
     Long countByPost_PostIdxAndStatus(Long postIdx, String status);
 
+    Long countByPost_PostIdxAndPositionAndStatus(Long postIdx,String position, String status );
+
     Page<PostParticipant> findAllByPost_PostIdxAndStatus(Long postIdx, String Status, Pageable pageable);
 
     @Query(value = "select p.userIdx from PostParticipant p where p.status='active' and p.post.postIdx=:postIdx")

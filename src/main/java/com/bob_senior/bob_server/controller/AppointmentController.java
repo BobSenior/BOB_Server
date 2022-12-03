@@ -266,7 +266,7 @@ public class AppointmentController {
             return new BaseResponse(BaseResponseStatus.INVALID_ACCESS_TO_APPOINTMENT);
         }
         try{
-            appointmentService.inviteUserByUUID(inviteDTO.getInvitedUUID(),postIdx);
+            appointmentService.inviteUserByUUID(inviteDTO.getInvitedUUID(),postIdx,inviteDTO.getPosition());
             return new BaseResponse(BaseResponseStatus.SUCCESS);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());

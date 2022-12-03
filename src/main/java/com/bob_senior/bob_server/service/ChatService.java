@@ -26,27 +26,29 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, PostRepository postRepository){
+    public ChatService(ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository, ChatMessageRepository chatMessageRepository, ChatRoomRepository chatRoomRepository, PostRepository postRepository, UserRepository userRepository){
         this.chatParticipantRepository = chatParticipantRepository;
         this.chatRepository = chatRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
     //채팅 페이지 가져오기
     public ChatPage loadChatPageData(Pageable pageable, Long roomIdx) throws BaseException {
         Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdx(roomIdx,pageable);
-        List<ChatDto> chats = new ArrayList<>();
+        List<ShownChat> chats = new ArrayList<>();
         for (ChatMessage page : pages) {
             Long sender = page.getSenderIdx();
             //해당 sender의 데이터를 여기서 쫙 가져오면 될듯 userRepository에서 - gravatar등등
-            chats.add(ChatDto.builder()
-                    .type("MESSAGE")
-                    .senderIdx(sender)
-                    .data(page.getMsgContent()).build());
+            chats.add(ShownChat.builder()
+                    .writtenAt(page.getSentAt().toString())
+                    .nickname(userRepository.findUserByUserIdx(page.getSenderIdx()).getNickName())
+                    .content(page.getMsgContent()).build());
         }
         ChatPage cp = ChatPage.builder()
                 .curPage(pageable.getPageNumber())
@@ -59,6 +61,7 @@ public class ChatService {
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
         long chatRoomIdx = postRepository.findPostByPostIdx(chatIdx).getChatRoomIdx();
+        System.out.println("chatRoomIdx = " + chatRoomIdx);
         boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatRoomIdx);
         if(!prev){
             //아예 등록 기록이 없을시 return false
@@ -113,17 +116,26 @@ public class ChatService {
     }
 
     //새로운 message의 db저장
-    public void  storeNewMessage(ChatDto msg,Timestamp ts,Long roomIdx) {
+    public ShownChat  storeNewMessage(ChatDto msg,Timestamp ts,Long roomIdx) {
         String chatId = UUID.randomUUID().toString().substring(0,8);
         System.out.println(chatId);
         ChatMessage cmg = ChatMessage.builder()
-                .chatRoom(chatRoomRepository.getReferenceById(roomIdx))
+                .chatRoom(chatRoomRepository.findChatRoomByChatRoomIdx(postRepository.findPostByPostIdx(roomIdx).getChatRoomIdx()))
                 .senderIdx(msg.getSenderIdx())
                 .sentAt(ts)
                 .msgContent(msg.getData())
                 .uuId(chatId)
                 .build();
         chatRepository.save(cmg);
+
+        return(
+                ShownChat.builder().
+                        nickname(userRepository.findUserByUserIdx(msg.getSenderIdx()).getNickName())
+                        .writtenAt(ts.toString())
+                        .content(msg.getData())
+                        .build()
+                );
+
     }
 
     //user가 방 밖으로 나갈시 disable시키기

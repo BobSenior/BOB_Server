@@ -14,11 +14,13 @@ public class MakeNewPostReqDTO {
 
     private Long writerIdx;
 
+    private String writerPosition;
+
     private String title;
 
     private String location;
 
-    private LocalDateTime meetingAt;
+    private String meetingAt;
 
     private String type;
 

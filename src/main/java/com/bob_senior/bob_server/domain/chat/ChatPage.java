@@ -11,6 +11,6 @@ public class ChatPage {
 
 private final Integer curPage;
 private final Integer length;
-private final List<ChatDto> chatList;
+private final List<ShownChat> chatList;
 
 }

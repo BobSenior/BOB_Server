@@ -17,6 +17,10 @@ public class MakeVoteDTO {
 
     private String title;
 
+    private String location;
+
+    private String time;
+
     private List<String> contents;
 
     private String voteType;

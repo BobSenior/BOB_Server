@@ -42,4 +42,6 @@ public interface VoteRepository extends JpaRepository<Vote,Long> {
     Vote findVoteByIsActivatedAndPostIdx(Integer activated, Long postIdx);
 
     Vote findVoteByPostIdxAndIsActivated(long postIdx, int activated);
+
+    List<Vote> findAllByPostIdx(long postIdx);
 }

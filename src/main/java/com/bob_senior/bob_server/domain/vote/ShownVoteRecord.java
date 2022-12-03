@@ -9,6 +9,8 @@ import lombok.*;
 @Builder
 public class ShownVoteRecord {
 
+    private Integer id;
+
     private String content;
 
     private Integer count;
