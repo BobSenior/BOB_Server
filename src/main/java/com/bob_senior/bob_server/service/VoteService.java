@@ -165,6 +165,11 @@ public class VoteService {
             throw new BaseException(BaseResponseStatus.ALREADY_EXIST_ONGOING_VOTE);
         }
 
+        if(makeVoteDTO.getVoteType().equals("FIX")){
+            makeVoteDTO.setTitle(makeVoteDTO.getLocation()+"$"+makeVoteDTO.getTime());
+        }
+        System.out.println("makeVoteDTO.getTitle() = " + makeVoteDTO.getTitle());
+
         //1. record들을 만들기
         List<String> list = makeVoteDTO.getContents();
         ArrayList<ShownVoteRecord> records = new ArrayList<>();
