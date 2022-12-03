@@ -25,6 +25,10 @@ public class AppointmentViewDTO {
 
     private String location;
 
+    private String latitude;
+
+    private String longitude;
+
     private String constraint;
 
     private LocalDateTime meetingAt;

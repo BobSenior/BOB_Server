@@ -19,6 +19,10 @@ public class MakeVoteDTO {
 
     private String location;
 
+    private String latitude;
+
+    private String longitude;
+
     private String time;
 
     private List<String> contents;

@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 @Service
@@ -68,7 +69,10 @@ public class AppointmentService {
 
     public AppointmentViewDTO getAppointmentData(Long postIdx,long userIdx) throws BaseException {
         Post post = postRepository.findPostByPostIdx(postIdx);
-
+        StringTokenizer st = new StringTokenizer(post.getPlace(),"$");
+        String location = st.nextToken();
+        String lat = st.nextToken();
+        String longt = st.nextToken();
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
 
@@ -125,7 +129,9 @@ public class AppointmentService {
                     .constraint(post.getParticipantConstraint())
                     .title(post.getTitle())
                     .postIdx(post.getPostIdx())
-                    .location(post.getPlace())
+                    .location(location)
+                    .latitude(lat)
+                    .longitude(longt)
                     .maxBuyerNum(post.getMaxBuyerNum())
                     .maxReceiverNum(post.getMaxReceiverNum())
                     .meetingAt(post.getMeetingDate())
@@ -142,7 +148,9 @@ public class AppointmentService {
                 .voteIdx(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getVoteIdx())
                 .title(post.getTitle())
                 .postIdx(post.getPostIdx())
-                .location(post.getPlace())
+                .location(location)
+                .latitude(lat)
+                .longitude(longt)
                 .maxBuyerNum(post.getMaxBuyerNum())
                 .maxReceiverNum(post.getMaxReceiverNum())
                 .meetingAt(post.getMeetingDate())
