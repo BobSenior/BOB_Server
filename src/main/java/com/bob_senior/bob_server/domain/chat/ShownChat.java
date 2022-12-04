@@ -10,6 +10,8 @@ import lombok.*;
 public class ShownChat {
     private String nickname;
 
+    private long senderIdx;
+
     private String writtenAt;
 
     private String content;

@@ -21,6 +21,10 @@ public class PostViewDTO {
 
     private String location;
 
+    private String latitude;
+
+    private String longitude;
+
     private Timestamp meetingAt;
 
     private List<SimplifiedUserProfileDTO> buyer;

@@ -1,6 +1,7 @@
 package com.bob_senior.bob_server.service;
 
 import com.bob_senior.bob_server.domain.appointment.MakeNewPostReqDTO;
+import com.bob_senior.bob_server.domain.appointment.RequestData;
 import com.bob_senior.bob_server.domain.chat.entity.ChatNUser;
 import com.bob_senior.bob_server.domain.chat.entity.ChatParticipant;
 import com.bob_senior.bob_server.domain.Post.entity.*;
@@ -106,7 +107,7 @@ public class AppointmentService {
         }
 
 
-        Vote vote = voteRepository.getVoteByPostIdx(postIdx);
+        Vote vote = voteRepository.getVoteByPostIdxAndIsActivated(postIdx,1);
 
         List<ShownVoteRecord> records = new ArrayList<>();
         if(vote!=null) {
@@ -157,8 +158,9 @@ public class AppointmentService {
                 .buyers(buyer)
                 .receivers(receiver)
                 .voteTitle(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getTitle())
-                .fixVote(!voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getVoteType().equals("normal"))
+                .fixVote(!voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getVoteType().equals("NORMAL"))
                 .records(records)
+                .voteOwnerIdx(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getCreatorIdx())
                 .maxNum(buyer.size() + receiver.size())
                 .alreadyVoted(voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVote_VoteIdx(userIdx,vote.getVoteIdx()))
                 .chatRoomIdx(post.getChatRoomIdx())
@@ -177,6 +179,10 @@ public class AppointmentService {
 
         for (PostParticipant waiting : participantList) {
             Post post = postRepository.findPostByPostIdx(waiting.getPost().getPostIdx());
+
+            String location_raw = post.getPlace();
+            StringTokenizer st = new StringTokenizer(location_raw,"$");
+            String location_real = st.nextToken();
 
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
@@ -211,7 +217,7 @@ public class AppointmentService {
                                     "test"
                             )
                             .writer(writer_simp)
-                            .location(post.getPlace())
+                            .location(location_real)
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
@@ -321,7 +327,7 @@ public class AppointmentService {
                         .postIdx(postIdx)
                         .flag(0)
                         .content(postIdx+"에 참가요청이 있습니다")
-                        .type("request")
+                        .type("PAIRequest")
                        .build()
         );
     }
@@ -345,19 +351,24 @@ public class AppointmentService {
 
 
 
-    public List<SimplifiedUserProfileDTO> getAllRequestInPost(Long userIdx,Long postIdx, Pageable pageable) {
+    public List<RequestData> getAllRequestInPost(Long userIdx, Long postIdx, Pageable pageable) {
         //모든 request의 head를 가져온다.
         List<PostParticipant> list = postParticipantRepository.findAllByPost_PostIdxAndStatus(postIdx,"waiting",pageable).getContent();
-        List<SimplifiedUserProfileDTO> data = new ArrayList<>();
+        List<RequestData> data = new ArrayList<>();
         for (PostParticipant participant : list) {
             User user = userRepository.findUserByUserIdx(participant.getUserIdx());
-            data.add(SimplifiedUserProfileDTO.builder()
-                    .userIdx(user.getUserIdx())
-                    .nickname(user.getNickName())
-                    .department(user.getDepartment())
-                    .school(user.getSchool())
-                    .schoolId(user.getSchoolId())
-                    .build());
+            data.add(
+                    RequestData.builder()
+                                    .position(participant.getPosition())
+                                            .simp(
+                                                    SimplifiedUserProfileDTO.builder()
+                                                            .userIdx(user.getUserIdx())
+                                                            .nickname(user.getNickName())
+                                                            .department(user.getDepartment())
+                                                            .school(user.getSchool())
+                                                            .schoolId(user.getSchoolId())
+                                                            .build())     .build()
+                                            );
         }
         // request관련 알람 flag해제하기
         noticeRepository.disableFriendRequestNotice("request",userIdx);
@@ -402,7 +413,7 @@ public class AppointmentService {
             //false일 경우 -> requst를 거절
             postParticipantRepository.changePostParticipationStatus("reject",postIdx,requesterIdx);
             result = "참가요청이 거절되었습니다";
-            type="reject";
+            type="PAIReject";
         }
         noticeRepository.save(
                 Notice.builder()
@@ -428,6 +439,10 @@ public class AppointmentService {
         System.out.println("posts = " + posts + pageable);
         List<AppointmentHeadDTO> data = new ArrayList<>();
         for (Post post : posts) {
+
+            String placeRaw = post.getPlace();
+            StringTokenizer st = new StringTokenizer(placeRaw,"$");
+            String location_read = st.nextToken();
 
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
@@ -457,7 +472,7 @@ public class AppointmentService {
                                             .school(writer.getSchool())
                                             .build()
                             )
-                            .location(post.getPlace())
+                            .location(location_read)
                             .writtenAt(post.getRegisteredAt())
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
@@ -530,7 +545,7 @@ public class AppointmentService {
                         .postIdx(postIdx)
                         .userIdx(user.getUserIdx())
                         .flag(0)
-                        .type("invite")
+                        .type("Invited")
                         .content("게시글에 초대되었습니다")
                         .build()
         );
@@ -555,6 +570,9 @@ public class AppointmentService {
         List<Post> list = postRepository.getAllParticipantThatCanParticipant(dep,searchString,now,userIdx,pageable).getContent();
         System.out.println("list = " + list);
         for (Post post : list) {
+            String location_raw = post.getPlace();
+            StringTokenizer st = new StringTokenizer(location_raw,"$");
+            String location_real = st.nextToken();
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
             long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
@@ -584,7 +602,7 @@ public class AppointmentService {
                                             .school(writer.getSchool())
                                             .build()
                             )
-                            .location(post.getPlace())
+                            .location(location_real)
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
@@ -610,6 +628,9 @@ public class AppointmentService {
         List<PostTag> list = postTagRepository.searchTagThatCanParticipate(tag,dep,pageable).getContent();
         for (PostTag pt : list) {
             Post post = pt.getPost();
+            String location_raw = post.getPlace();
+            StringTokenizer st = new StringTokenizer(location_raw,"$");
+            String location_real = st.nextToken();
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
             long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
@@ -639,7 +660,7 @@ public class AppointmentService {
                                             .school(writer.getSchool())
                                             .build()
                             )
-                            .location(post.getPlace())
+                            .location(location_real)
                             .meetingAt(post.getMeetingDate())
                             .type(post.getMeetingType())
                             .status(post.getRecruitmentStatus())
@@ -657,6 +678,11 @@ public class AppointmentService {
     public PostViewDTO getPostData(Long roomIdx,Long userIdx) throws BaseException{
         //해당 post의 데이터 싸그리 가져오기
         Post post = postRepository.findPostByPostIdx(roomIdx);
+        String location_raw = post.getPlace();
+        StringTokenizer st = new StringTokenizer(location_raw,"$");
+        String location_real = st.nextToken();
+        String latitude = st.nextToken();
+        String longitude = st.nextToken();
 
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
@@ -701,7 +727,9 @@ public class AppointmentService {
                 .postIdx(post.getPostIdx())
                 .title(post.getTitle())
                 .groupConstraint(post.getParticipantConstraint())
-                .location(post.getPlace())
+                .location(location_real)
+                .latitude(latitude)
+                .longitude(longitude)
                 .meetingAt(Timestamp.valueOf(post.getMeetingDate()))
                 .buyer(buyer)
                 .receiver(receiver)
@@ -759,7 +787,7 @@ public class AppointmentService {
                 Notice.builder()
                         .postIdx(0L)
                         .userIdx(kickedIdx)
-                        .type("kick")
+                        .type("Banned")
                         .content("약속에서 강퇴당했습니다")
                         .flag(0)
                         .build()

@@ -166,9 +166,8 @@ public class VoteService {
         }
 
         if(makeVoteDTO.getVoteType().equals("FIX")){
-            makeVoteDTO.setTitle(makeVoteDTO.getLocation()+"$"+makeVoteDTO.getTime());
+            makeVoteDTO.setTitle(makeVoteDTO.getLocation()+"$"+makeVoteDTO.getLatitude()+"$"+makeVoteDTO.getLongitude()+"$"+makeVoteDTO.getTime());
         }
-        System.out.println("makeVoteDTO.getTitle() = " + makeVoteDTO.getTitle());
 
         //1. record들을 만들기
         List<String> list = makeVoteDTO.getContents();
@@ -258,6 +257,7 @@ public class VoteService {
         //TODO : 투표 타입에 따라 appointment의 정보를 가공
         //TODO : 알람 table사용시 여기에 저장해야되나
         String result = vr.getVoteContent();
+        String noticeType = "";
         if(!voteType.equals("NORMAL") && vr.getCount()!=postRepository.getMaximumParticipationNumFromPost(vote.getPostIdx())){
             throw new BaseException(BaseResponseStatus.VOTE_RESULT_IS_NOT_UNANIMITY);
         }
@@ -271,17 +271,24 @@ public class VoteService {
                 if(vr.getCount()<total_Num){
                     //reject changing
                     content="투표가 종료되었습니다";
+                    noticeType="VoteEnd";
                     break;
                 }
-                StringTokenizer st = new StringTokenizer(vr.getVoteContent(),"$",false);
+                String title = vote.getTitle();
+                StringTokenizer st = new StringTokenizer(title,"$",false);
                 String location = st.nextToken();
+                String latitude = st.nextToken();
+                String longitude = st.nextToken();
+                location = location + "$" + latitude + "$" + longitude;
                 String time_string = st.nextToken();
-                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+                System.out.println("time_string = " + time_string);
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
                 LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(time_string));
                 LocalDateTime now = LocalDateTime.now();
                 if(now.isAfter(localDateTime)) throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
                 Timestamp ts = Timestamp.valueOf(localDateTime);
-                postRepository.applyVoteResultDateAndLocation(ts,location,postIdx);
+                postRepository.applyVoteResultDateAndLocation(localDateTime,location,postIdx);
+                postRepository.fixPost(postIdx);
                 content = "약속이 확정되었습니다";
                 break;
             }
@@ -303,6 +310,7 @@ public class VoteService {
                 postParticipantRepository.deleteAllParticipantInPost(postIdx);
                 postRepository.delete(post);
                 content = "약속이 파기되었습니다";
+                noticeType="CanceledPlan";
                 break;
             }
             default:{

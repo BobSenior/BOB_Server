@@ -46,6 +46,7 @@ public class ChatService {
             Long sender = page.getSenderIdx();
             //해당 sender의 데이터를 여기서 쫙 가져오면 될듯 userRepository에서 - gravatar등등
             chats.add(ShownChat.builder()
+                            .senderIdx(page.getSenderIdx())
                     .writtenAt(page.getSentAt().toString())
                     .nickname(userRepository.findUserByUserIdx(page.getSenderIdx()).getNickName())
                     .content(page.getMsgContent()).build());
@@ -132,6 +133,7 @@ public class ChatService {
                 ShownChat.builder().
                         nickname(userRepository.findUserByUserIdx(msg.getSenderIdx()).getNickName())
                         .writtenAt(ts.toString())
+                        .senderIdx(msg.getSenderIdx())
                         .content(msg.getData())
                         .build()
                 );

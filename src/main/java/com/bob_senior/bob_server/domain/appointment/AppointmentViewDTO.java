@@ -43,6 +43,8 @@ public class AppointmentViewDTO {
 
     private Long voteIdx;
 
+    private Long voteOwnerIdx;
+
     private boolean fixVote;
 
     private String voteTitle;

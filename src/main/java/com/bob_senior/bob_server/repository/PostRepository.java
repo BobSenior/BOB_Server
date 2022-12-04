@@ -2,6 +2,7 @@ package com.bob_senior.bob_server.repository;
 
 import com.bob_senior.bob_server.domain.Post.entity.Post;
 import com.bob_senior.bob_server.domain.Post.entity.PostParticipant;
+import org.apache.tomcat.jni.Local;
 import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
@@ -20,7 +21,14 @@ public interface PostRepository extends JpaRepository<Post,Long> {
     @Transactional
     @Modifying
     @Query(value = "update Post p set p.meetingDate = :meetingDate, p.place = :place where p.postIdx = :postIdx")
-    void applyVoteResultDateAndLocation(@Param("meetingDate")Timestamp meetingDate,@Param("place") String place, @Param("postIdx") Long postIdx);
+    void applyVoteResultDateAndLocation(@Param("meetingDate") LocalDateTime meetingDate, @Param("place") String place, @Param("postIdx") Long postIdx);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update Post p set p.recruitmentStatus = 'fix' where p.postIdx=:postIdx")
+    void fixPost(@Param("postIdx") long postIdx);
+
+
 
     @Transactional
     @Modifying
