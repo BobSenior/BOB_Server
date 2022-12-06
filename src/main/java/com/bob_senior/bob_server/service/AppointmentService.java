@@ -140,6 +140,7 @@ public class AppointmentService {
                     .buyers(buyer)
                     .receivers(receiver)
                     .chatRoomIdx(post.getChatRoomIdx())
+                    .type(post.getMeetingType())
                     .build();
         }
 
@@ -164,6 +165,7 @@ public class AppointmentService {
                 .maxNum(buyer.size() + receiver.size())
                 .alreadyVoted(voteParticipatedRepository.existsVoteParticipatedByUserIdxAndVote_VoteIdx(userIdx,vote.getVoteIdx()))
                 .chatRoomIdx(post.getChatRoomIdx())
+                .type(post.getMeetingType())
                 .build();
     }
 
@@ -300,14 +302,14 @@ public class AppointmentService {
         Post p = postRepository.findPostByPostIdx(postIdx);
         if(position.equals("buyer")){
             if(cur_participation_count>=p.getMaxBuyerNum()
-                    || p.getRecruitmentStatus() == "FINISHED"){
+                    || p.getRecruitmentStatus() == "finish"){
                 //이미 풀방 || recruitmentStatus가 이미 완료시 더이상 참여 불가능
                 throw new BaseException(BaseResponseStatus.UNABLE_TO_MAKE_REQUEST_IN_POST);
             }
         }
         else{
             if(cur_participation_count>=p.getMaxReceiverNum()
-                    || p.getRecruitmentStatus() == "FINISHED"){
+                    || p.getRecruitmentStatus() == "finish"){
                 //이미 풀방 || recruitmentStatus가 이미 완료시 더이상 참여 불가능
                 throw new BaseException(BaseResponseStatus.UNABLE_TO_MAKE_REQUEST_IN_POST);
             }
@@ -408,6 +410,11 @@ public class AppointmentService {
             changeRecruitmentStatusIfFull(post, total, curr);
             type="accept";
             result = "참가요청이 수락되었습니다";
+            long count = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
+            if(count == post.getParticipantLimit()){
+                post.setRecruitmentStatus("finish");
+                postRepository.save(post);
+            }
         }
         else{
             //false일 경우 -> requst를 거절
@@ -754,6 +761,10 @@ public class AppointmentService {
         Post post = postRepository.findPostByPostIdx(postIdx);
         Long chatRoomIdx = post.getChatRoomIdx();
         chatParticipantRepository.deleteByChatNUser(new ChatNUser(chatRoomIdx,userIdx));
+        if(post.getRecruitmentStatus().equals("finish")){
+            post.setRecruitmentStatus("active");
+            postRepository.save(post);
+        }
 
         //2. 해당 user의 이탈로 만약 더이상 참여 인원이 없을시 -> post와 chatroom을 제거
         long remains = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active");
@@ -783,6 +794,7 @@ public class AppointmentService {
     public void kickUser(long postIdx, long kickerIdx, long kickedIdx) throws BaseException{
         long roomIdx = postRepository.findPostByPostIdx(postIdx).getChatRoomIdx();
         chatParticipantRepository.deleteByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(kickedIdx,roomIdx);
+        postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx,kickedIdx);
         noticeRepository.save(
                 Notice.builder()
                         .postIdx(0L)
@@ -792,6 +804,11 @@ public class AppointmentService {
                         .flag(0)
                         .build()
         );
+        Post post = postRepository.findPostByPostIdx(postIdx);
+        if(post.getRecruitmentStatus().equals("finish")){
+            post.setRecruitmentStatus("active");
+            postRepository.save(post);
+        }
     }
 
     @Transactional

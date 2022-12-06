@@ -75,4 +75,6 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     Post findPostByWriterIdxAndAndChatRoomIdx(Long writerIdx, Long chatRoomIdx);
 
+
+
 }

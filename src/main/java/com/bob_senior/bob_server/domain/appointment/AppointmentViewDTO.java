@@ -31,6 +31,8 @@ public class AppointmentViewDTO {
 
     private String constraint;
 
+    private String type;
+
     private LocalDateTime meetingAt;
 
     private List<SimplifiedUserProfileDTO> buyers;
