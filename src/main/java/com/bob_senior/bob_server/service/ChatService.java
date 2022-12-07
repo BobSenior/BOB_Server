@@ -39,7 +39,8 @@ public class ChatService {
     }
 
     //채팅 페이지 가져오기
-    public ChatPage loadChatPageData(Pageable pageable, Long roomIdx) throws BaseException {
+    public ChatPage loadChatPageData(Pageable pageable, Long postIdx) throws BaseException {
+        long roomIdx = postRepository.findPostByPostIdx(postIdx).getChatRoomIdx();
         Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdx(roomIdx,pageable);
         List<ShownChat> chats = new ArrayList<>();
         for (ChatMessage page : pages) {

@@ -46,7 +46,7 @@ public class ChatController {
 
 
     //첫 연결시 거치는 api
-    @MessageMapping("/stomp/record/{roomIdx}")
+    @PostMapping("/stomp/record/{roomIdx}")
     public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable Long roomIdx, SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
         chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomIdx);
@@ -82,6 +82,7 @@ public class ChatController {
     @MessageMapping("/stomp/{roomIdx}")
     @SendTo("/topic/room/{roomIdx}")
     public BaseResponse sendChatToMembers(ChatDto msg, @DestinationVariable Long roomIdx){
+        System.out.println("msg = " + msg);
         Long user = msg.getSenderIdx();
         if(!userService.checkUserExist(user)){
             return new BaseResponse<>(BaseResponseStatus.INVALID_USER);
