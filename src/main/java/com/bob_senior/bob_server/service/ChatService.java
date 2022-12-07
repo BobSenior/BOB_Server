@@ -39,9 +39,9 @@ public class ChatService {
     }
 
     //채팅 페이지 가져오기
-    public ChatPage loadChatPageData(Pageable pageable, Long postIdx) throws BaseException {
+    public List<ShownChat> loadChatPageData(Pageable pageable, Long postIdx) throws BaseException {
         long roomIdx = postRepository.findPostByPostIdx(postIdx).getChatRoomIdx();
-        Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdx(roomIdx,pageable);
+        Page<ChatMessage> pages =  chatRepository.findByChatRoom_ChatRoomIdxOrderBySentAtDesc(roomIdx,pageable);
         List<ShownChat> chats = new ArrayList<>();
         for (ChatMessage page : pages) {
             Long sender = page.getSenderIdx();
@@ -52,12 +52,7 @@ public class ChatService {
                     .nickname(userRepository.findUserByUserIdx(page.getSenderIdx()).getNickName())
                     .content(page.getMsgContent()).build());
         }
-        ChatPage cp = ChatPage.builder()
-                .curPage(pageable.getPageNumber())
-                .length(pageable.getPageSize())
-                .chatList(chats)
-                .build();
-        return cp;
+        return chats;
     }
 
     //유저가 해당 방에 참여하는 여부 확인
@@ -85,8 +80,7 @@ public class ChatService {
             //null일시 새로 데이터를 세팅해주고 0개 return
             return chatRepository.countByChatRoomChatRoomIdx(roomIdx);
         }
-        LocalDateTime lastRead = ts.toLocalDateTime();
-        return chatRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtIsAfter(roomIdx,lastRead);
+        return chatRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtIsAfter(roomIdx,ts);
     }
 
     //모든 채팅의 읽지 않은 개수를 가져오기

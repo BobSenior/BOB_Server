@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class ShownChat {
+
     private String nickname;
 
     private long senderIdx;

@@ -28,7 +28,7 @@ public class DisconnectSocketConfig {
     public void onDisconnectEvent(SessionDisconnectEvent event){
         //내가 알 수 있는건 오직 sessionId -> 이걸로 record안의 데이터를 가져옴
         SessionRecord sessionRecord = sessionRecordRepository.findBySessionId(event.getSessionId());
-        System.out.println(sessionRecord);
+        System.out.println("sessionrecordcheckcheck"+sessionRecord);
         //저장된 세션을 지운다
         sessionRecordRepository.delete(sessionRecord);
         //할일 1 : 해당 유저의 lastRead갱신

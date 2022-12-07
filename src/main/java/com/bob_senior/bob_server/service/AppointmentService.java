@@ -813,7 +813,12 @@ public class AppointmentService {
 
     @Transactional
     public void makeNewPost(MakeNewPostReqDTO makeNewPostReqDTO) throws BaseException{
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        //이거
+        //시간이 1시라 HH로 인식이 안되거든요
+        //근데 이러면 12시를인식을 못함
+        //01:45로 보내주실수잇어요?
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime time = null;
         if(makeNewPostReqDTO.getMeetingAt() != null) {
             time = LocalDateTime.parse(makeNewPostReqDTO.getMeetingAt(), formatter);

@@ -44,6 +44,7 @@ public class AppointmentHeadDTO {
 
     private List<String> tagHeads;
 
+
     @OneToMany(mappedBy = "")
     private List<PostParticipant> participantList = new ArrayList<>();
 

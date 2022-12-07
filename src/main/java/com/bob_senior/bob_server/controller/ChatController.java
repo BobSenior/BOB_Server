@@ -1,5 +1,6 @@
 package com.bob_senior.bob_server.controller;
 
+import com.bob_senior.bob_server.domain.appointment.entity.TotalNotice;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.chat.ChatDto;
 import com.bob_senior.bob_server.domain.chat.ChatPage;
@@ -8,7 +9,7 @@ import com.bob_senior.bob_server.domain.chat.ShownChat;
 import com.bob_senior.bob_server.domain.chat.entity.SessionRecord;
 import com.bob_senior.bob_server.domain.base.BaseResponse;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
-import com.bob_senior.bob_server.domain.user.UserIdxDTO;
+import com.bob_senior.bob_server.repository.PostRepository;
 import com.bob_senior.bob_server.repository.SessionRecordRepository;
 import com.bob_senior.bob_server.service.ChatService;
 import com.bob_senior.bob_server.service.UserService;
@@ -23,6 +24,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -33,24 +35,34 @@ public class ChatController {
     private final SimpMessageSendingOperations simpMessageSendingOperations;
     private final VoteService voteService;
     private final SessionRecordRepository sessionRecordRepository;
+    private final PostRepository postRepository;
 
     @Autowired
     public ChatController(SimpMessageSendingOperations simpMessageSendingOperations,
-                          UserService userService, ChatService chatService, VoteService voteService, SessionRecordRepository sessionRecordRepository) {
+                          UserService userService, ChatService chatService, VoteService voteService, SessionRecordRepository sessionRecordRepository, PostRepository postRepository) {
         this.userService = userService;
         this.chatService = chatService;
         this.simpMessageSendingOperations = simpMessageSendingOperations;
         this.voteService = voteService;
         this.sessionRecordRepository = sessionRecordRepository;
+        this.postRepository = postRepository;
     }
 
 
     //첫 연결시 거치는 api
     @PostMapping("/stomp/record/{roomIdx}")
-    public BaseResponse recordUserSessionIdAndClientData(@DestinationVariable Long roomIdx, SessionAndClientRecord sessionAndClientRecord){
+    public BaseResponse recordUserSessionIdAndClientData(@PathVariable Long roomIdx, @RequestBody SessionAndClientRecord sessionAndClientRecord){
         //웹소켓이 연결된 직후 이 api로 전송 -> (sessionId, UserIdx, roomIdx)를 저장
+        System.out.println("sessionAndClientRecord = " + sessionAndClientRecord);
+        System.out.println("roomIdx = " + roomIdx);
         chatService.activateChatParticipation(sessionAndClientRecord.getUserIdx(),roomIdx);
-        sessionRecordRepository.save(new SessionRecord(sessionAndClientRecord.getSessionId(),sessionAndClientRecord.getUserIdx(),roomIdx));
+        long chatroom = postRepository.findPostByPostIdx(roomIdx).getChatRoomIdx();
+        sessionRecordRepository.save(
+                SessionRecord.builder()
+                .sessionId(sessionAndClientRecord.getSessionId())
+                .chatIdx(chatroom)
+                .userIdx(sessionAndClientRecord.getUserIdx())
+                .build());
         return new BaseResponse(BaseResponseStatus.SUCCESS);
     }
 
@@ -129,7 +141,7 @@ public class ChatController {
 
     // 채팅을 페이지 단위로 받아오기
     @GetMapping("/chat/load/{roomId}")
-    public BaseResponse<ChatPage> getChatRecordByPage(@PathVariable Long roomId, Pageable pageable){
+    public BaseResponse getChatRecordByPage(@PathVariable Long roomId, Pageable pageable){
         //pageable = requestParam으로 받음
         //format :
         try {
@@ -141,11 +153,12 @@ public class ChatController {
         }
         ChatPage chats = null;
         try {
-            chats = chatService.loadChatPageData(pageable,roomId);
+            List<ShownChat> data = chatService.loadChatPageData(pageable,roomId);
+            return new BaseResponse(data);
         } catch (Exception e) {
             //no page Exception..
+            return new BaseResponse(BaseResponseStatus.TAG_DOES_NOT_EXIST);
         }
-        return new BaseResponse<>(chats);
     }
 
 
@@ -176,7 +189,10 @@ public class ChatController {
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
         try{
-            return new BaseResponse(chatService.getAllUnreadChatNum(userIdx));
+            long count = chatService.getAllUnreadChatNum(userIdx);
+            System.out.println("count = " + count);
+            TotalNotice tn = TotalNotice.builder().totalCount(count).build();
+            return new BaseResponse(tn);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }
