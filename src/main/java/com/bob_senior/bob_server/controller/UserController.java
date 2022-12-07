@@ -61,7 +61,12 @@ public class UserController {
     @PostMapping("/signUp")
     public BaseResponse<CreateUserResDTO> createUser (@RequestBody CreateUserReqDTO createUserReqDTO){
         //학교 이메일 맞는지 확인하는 로직 추가해야함
-        return new BaseResponse<>( userService.registerUser(createUserReqDTO));
+        try{
+            return new BaseResponse<>( userService.registerUser(createUserReqDTO));
+        }catch (BaseException e){
+            return new BaseResponse<>(e.getStatus());
+        }
+
     }
 
 

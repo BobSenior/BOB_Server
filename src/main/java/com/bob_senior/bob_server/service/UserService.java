@@ -3,14 +3,11 @@ package com.bob_senior.bob_server.service;
 import com.bob_senior.bob_server.domain.base.BaseException;
 import com.bob_senior.bob_server.domain.base.BaseResponseStatus;
 import com.bob_senior.bob_server.domain.email.entity.EmailAuth;
+import com.bob_senior.bob_server.domain.email.entity.SchoolEmail;
 import com.bob_senior.bob_server.domain.notice.entity.Notice;
 import com.bob_senior.bob_server.domain.user.*;
 import com.bob_senior.bob_server.domain.user.entity.*;
-import com.bob_senior.bob_server.repository.BlockRepository;
-import com.bob_senior.bob_server.repository.FriendshipRepository;
-import com.bob_senior.bob_server.repository.EmailAuthRepository;
-import com.bob_senior.bob_server.repository.UserRepository;
-import com.bob_senior.bob_server.repository.NoticeRepository;
+import com.bob_senior.bob_server.repository.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -30,16 +27,18 @@ public class UserService {
     private final BlockRepository blockRepository;
     private final FriendshipRepository friendshipRepository;
     private final EmailAuthRepository emailAuthRepository;
+    private final SchoolEmailRepository schoolEmailRepository;
     private final MailService mailService;
     private final NoticeRepository noticeRepository;
     private final JwtService jwtService;
 
     @Autowired
-    UserService(UserRepository userRepository, BlockRepository blockRepository, FriendshipRepository friendshipRepository, EmailAuthRepository emailAuthRepository, MailService mailService,
+    UserService(UserRepository userRepository, BlockRepository blockRepository, FriendshipRepository friendshipRepository, EmailAuthRepository emailAuthRepository, SchoolEmailRepository schoolEmailRepository, MailService mailService,
                 NoticeRepository noticeRepository, JwtService jwtService){
         this.userRepository = userRepository;
         this.blockRepository = blockRepository;
         this.emailAuthRepository = emailAuthRepository;
+        this.schoolEmailRepository = schoolEmailRepository;
         this.mailService = mailService;
         this.noticeRepository = noticeRepository;
         this.friendshipRepository = friendshipRepository;
@@ -186,7 +185,26 @@ public class UserService {
         return userProfileDTOList;
     }
 
-    public CreateUserResDTO registerUser(CreateUserReqDTO createUserReqDTO){
+    public CreateUserResDTO registerUser(CreateUserReqDTO createUserReqDTO) throws BaseException{
+        //이메일 뒷부분만 따와서 검증
+        String userEmail = createUserReqDTO.getEmail();
+        String userEmailBack = userEmail.substring(userEmail.indexOf("@")+1,userEmail.length());
+
+        SchoolEmail schoolEmailEntity = schoolEmailRepository.findBySchoolName(createUserReqDTO.getSchool());
+
+        log.info(userEmail.length());
+        log.info(userEmailBack);
+
+        if(schoolEmailEntity == null){
+            throw new BaseException(SCHOOL_NAME_NOT_REGISTERED);
+        }
+
+        if(!schoolEmailEntity.getSchoolEmail().equals(userEmailBack)){
+            throw new BaseException(EMAIL_NOT_MATCHED);
+        }
+
+
+
         User user = User.builder().department(createUserReqDTO.getDepartment())
                 .email(createUserReqDTO.getEmail())
                 .password(createUserReqDTO.getPassword())
