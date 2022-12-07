@@ -74,7 +74,6 @@ public class MailService {
             throw new BaseException(BaseResponseStatus.EXPIRED_MAIL_LINK);
         }
 
-
         User user = userRepository.findTopByEmailOrderByCreatedAtDesc(emailAuthRequestDTO.getEmail());
         user.setAuthorizedStatus("A");
         userRepository.save(user);

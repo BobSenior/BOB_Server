@@ -64,6 +64,8 @@ public enum BaseResponseStatus {
     SIGNUP_INVALID_USER_ID(false, 5006, "아이디는 영어와 숫자를 조합한 2-10 자리만 가능합니다."),
     SIGNUP_ALREADY_EXIST_ID(false, 5007, "이미 사용중인 아이디입니다."),
     EMAIL_NOT_AUTHORIZED(false, 5008, "이메일에서 인증 완료후 로그인해주세요."),
+    EMAIL_NOT_MATCHED(false, 5009, "학교 이메일과 일치 하는 메일을 입력해주세요."),
+    SCHOOL_NAME_NOT_REGISTERED(false, 5010, "등록되지 않은 학교 입니다. 학교 이름을 확인해주세요"),
         ;
 
     private final boolean isSuccess;
