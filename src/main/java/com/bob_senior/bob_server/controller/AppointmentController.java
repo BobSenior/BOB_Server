@@ -47,8 +47,8 @@ public class AppointmentController {
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }
         try{
-            appointmentService.makeNewPost(makeNewPostReqDTO);
-            return new BaseResponse(BaseResponseStatus.SUCCESS);
+            long count = appointmentService.makeNewPost(makeNewPostReqDTO);
+            return new BaseResponse(count);
         }catch(BaseException e){
             return new BaseResponse(e.getStatus());
         }
@@ -301,8 +301,11 @@ public class AppointmentController {
         if(!appointmentService.isPostExist(postIdx)){
             return new BaseResponse(BaseResponseStatus.NON_EXIST_POSTIDX);
         }
-        if(!appointmentService.isOwnerOfPost(kickUserDTo.getKickerIdx(), kickUserDTo.getKickerIdx())){
+        if(!appointmentService.isOwnerOfPost(kickUserDTo.getKickerIdx(), postIdx)){
             return new BaseResponse(BaseResponseStatus.IS_NOT_OWNER_OF_APPOINTMENT);
+        }
+        if(kickUserDTo.getKickedIdx() == kickUserDTo.getKickerIdx()){
+            return new BaseResponse(BaseResponseStatus.INVALID_KICK_USER_SELF);
         }
         try{
             appointmentService.kickUser(postIdx, kickUserDTo.getKickerIdx(),kickUserDTo.getKickedIdx());

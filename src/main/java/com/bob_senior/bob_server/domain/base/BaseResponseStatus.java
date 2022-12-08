@@ -35,6 +35,7 @@ public enum BaseResponseStatus {
     IS_NOT_PARTICIPANT_OF_APPOINTMENT(false, 2022, "해당 약속에 참여하고 있지 않습니다"),
     INVALID_UUID_FOR_USER(false, 2023,"존재하지 않는 uuid입니다"),
     IS_NOT_OWNER_OF_APPOINTMENT(false, 2024, "게시글의 작성자가 아닙니다"),
+    INVALID_KICK_USER_SELF(false,2025,"자신을 강퇴할 수 없습니다"),
 
 
     /**

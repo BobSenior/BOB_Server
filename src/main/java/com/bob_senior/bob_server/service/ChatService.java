@@ -58,6 +58,7 @@ public class ChatService {
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
         long chatRoomIdx = postRepository.findPostByPostIdx(chatIdx).getChatRoomIdx();
+        System.out.println("userIdx = " + userIdx);
         System.out.println("chatRoomIdx = " + chatRoomIdx);
         boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatRoomIdx);
         if(!prev){
@@ -73,9 +74,14 @@ public class ChatService {
     }
 
     //해당 유저의 lastRead기준으로 읽지 않은 개수 가져오기
-    public Long getNumberOfUnreadChatByUserIdx(Long userIdx,Long roomIdx){
+    public Long getNumberOfUnreadChatByUserIdx(Long userIdx,Long roomIdx,boolean flag){
+
+        if(flag){
+            roomIdx = postRepository.findPostByPostIdx(roomIdx).getChatRoomIdx();
+        }
 
         Timestamp ts = chatParticipantRepository.getLastReadByUserIdx(userIdx,roomIdx);
+        System.out.println("ts = " + ts);
         if(ts == null){
             //null일시 새로 데이터를 세팅해주고 0개 return
             return chatRepository.countByChatRoomChatRoomIdx(roomIdx);
@@ -104,7 +110,7 @@ public class ChatService {
         Timestamp timestamp = new Timestamp(datetime);
         ChatParticipant cp = ChatParticipant.builder()
                 .chatNUser(rau)
-                .status("A")
+                .status("active")
                 .lastRead(timestamp)
                 .build();
         chatParticipantRepository.save(cp);
@@ -154,7 +160,7 @@ public class ChatService {
         List<ChatParticipant> list = chatParticipantRepository.getAllByChatNUser_UserIdx(userIdx);
         for (ChatParticipant chatParticipant : list) {
             long roomIdx = chatParticipant.getChatNUser().getChatRoomIdx();
-            totalCount+=getNumberOfUnreadChatByUserIdx(userIdx,roomIdx);
+            totalCount+=getNumberOfUnreadChatByUserIdx(userIdx,roomIdx,false);
         }
         return totalCount;
     }

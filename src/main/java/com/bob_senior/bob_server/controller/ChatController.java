@@ -178,7 +178,7 @@ public class ChatController {
             //TODO : 유저가 채팅방에 존재하지 않을시 처리
             return new BaseResponse(BaseResponseStatus.INVALID_CHATROOM_ACCESS);
         }
-        return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId));
+        return new BaseResponse<>(chatService.getNumberOfUnreadChatByUserIdx(userIdx,roomId,true));
         //return new BaseResponse(chatService.getTotalNumberOfUnreadChatByUserIdx(userIdx));
     }
 
@@ -190,7 +190,6 @@ public class ChatController {
         }
         try{
             long count = chatService.getAllUnreadChatNum(userIdx);
-            System.out.println("count = " + count);
             TotalNotice tn = TotalNotice.builder().totalCount(count).build();
             return new BaseResponse(tn);
         }catch(BaseException e){

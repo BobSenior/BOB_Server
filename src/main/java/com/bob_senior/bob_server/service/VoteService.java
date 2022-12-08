@@ -165,6 +165,8 @@ public class VoteService {
             throw new BaseException(BaseResponseStatus.ALREADY_EXIST_ONGOING_VOTE);
         }
 
+
+
         if(makeVoteDTO.getVoteType().equals("FIX")){
             makeVoteDTO.setTitle(makeVoteDTO.getLocation()+"$"+makeVoteDTO.getLatitude()+"$"+makeVoteDTO.getLongitude()+"$"+makeVoteDTO.getTime());
         }
@@ -253,21 +255,31 @@ public class VoteService {
     }
 
     private void handleVoteResultByType(String voteType, VoteRecord vr,Long postIdx,Vote vote,List<Long> list) throws BaseException{
+        System.out.println("handlesssss"+voteType);
         //투표의 결과를 바로 반영 -> problem : 투표가 동률나오면?
         //TODO : 투표 타입에 따라 appointment의 정보를 가공
         //TODO : 알람 table사용시 여기에 저장해야되나
         String result = vr.getVoteContent();
         String noticeType = "";
-        if(!voteType.equals("NORMAL") && vr.getCount()!=postRepository.getMaximumParticipationNumFromPost(vote.getPostIdx())){
+        
+        //현재원의 total을 세야됨....
+        int cur_all = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active").intValue();
+        System.out.println("cur_all = " + cur_all);
+        
+        
+        if(!voteType.equals("NORMAL") && vr.getCount()!=cur_all){
             throw new BaseException(BaseResponseStatus.VOTE_RESULT_IS_NOT_UNANIMITY);
         }
         String content = "";
+        System.out.println("voteType = " + voteType);
         switch(voteType){
             case "FIX" : {
                 //시간 + 장소의 데이터로 넘어오게 되면 이를 바로 반영
                 //string의 pattern -> location$yyyy/MM/dd HH:mm -> $기준으로 split
                 //1. 만장일치인지 확인하기
                 int total_Num = postParticipantRepository.countByPost_PostIdxAndStatus(postIdx,"active").intValue();
+                if(vr.getVoteContent().equals("반대")) return;
+                System.out.println("total_Num = " + total_Num);
                 if(vr.getCount()<total_Num){
                     //reject changing
                     content="투표가 종료되었습니다";
@@ -282,7 +294,7 @@ public class VoteService {
                 location = location + "$" + latitude + "$" + longitude;
                 String time_string = st.nextToken();
                 System.out.println("time_string = " + time_string);
-                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                 LocalDateTime localDateTime = LocalDateTime.from(dateTimeFormatter.parse(time_string));
                 LocalDateTime now = LocalDateTime.now();
                 if(now.isAfter(localDateTime)) throw new BaseException(BaseResponseStatus.DATE_TIME_ERROR);
