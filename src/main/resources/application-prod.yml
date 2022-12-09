@@ -1,0 +1,65 @@
+spring:
+
+  config:
+    name: bob_senior
+    activate:
+      on-profile: prod
+
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${BOB_RDS_URL}
+    username: ${BOB_RDS_USERNAME}
+    password: ${BOB_RDS_PASSWORD}
+
+
+  redis:
+    host: ${BOB_REDIS_HOST}
+    port: ${BOB_REDIS_PORT}
+
+    mail:
+      host: smtp.gmail.com
+      port: 587
+      username: ${BOB_MAIL_USERNAME}
+      password: ${BOB_MAIN_PASSWORD}
+
+      properties:
+        mail.smtp.auth: true
+        mail.smtp.starttls.enable: true
+
+
+cloud:
+  aws:
+    credentials:
+      accessKey: ${BOB_S3_ACCESSKEY}
+      secretKey: ${BOB_S3_SECRETKEY}
+    s3:
+      bucket: ${BOB_S3_BUCKET}
+    region:
+      static: ${BOB_S3_REGION}
+    stack:
+      auto: false
+
+
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
+
+jwt:
+  secret: ${BOB_JWT_SECRETKEY}
+
+
+#bob:
+#  firebase:
+#    secret:
+#      path: ${BOB_FIREBASE_KEYPATH}
+
+
