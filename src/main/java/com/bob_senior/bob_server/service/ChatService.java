@@ -58,16 +58,18 @@ public class ChatService {
     //유저가 해당 방에 참여하는 여부 확인
     public boolean checkUserParticipantChatting(Long chatIdx, Long userIdx){
         long chatRoomIdx = postRepository.findPostByPostIdx(chatIdx).getChatRoomIdx();
-        System.out.println("userIdx = " + userIdx);
         System.out.println("chatRoomIdx = " + chatRoomIdx);
+        System.out.println("userIdxxxxxx = " + userIdx);
         boolean prev = chatParticipantRepository.existsByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(userIdx,chatRoomIdx);
+        System.out.println("prevsssssss = " + prev);
         if(!prev){
             //아예 등록 기록이 없을시 return false
             return false;
         }
         //등록기록이 있더라도 status가 Q일시 return false
-        ChatParticipant cp = chatParticipantRepository.getByChatNUser_ChatRoomIdxAndChatNUser_UserIdx(chatIdx,userIdx);
+        ChatParticipant cp = chatParticipantRepository.getByChatNUser_ChatRoomIdxAndChatNUser_UserIdx(chatRoomIdx,userIdx);
         if(cp == null) return true;
+        System.out.println("cppppppp     = " + cp.getStatus());
         if(cp.getStatus().equals("Q")) return false;
         return true;
 
@@ -145,7 +147,6 @@ public class ChatService {
     public void deleteUserFromRoom(Long roomId, Long sender) {
         ChatNUser rau = new ChatNUser(roomId,sender);
         ChatParticipant cp = chatParticipantRepository.findChatParticipantByChatNUser(rau);
-        cp.setStatus("Q");
         chatParticipantRepository.save(cp);
     }
 

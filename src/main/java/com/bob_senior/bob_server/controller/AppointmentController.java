@@ -192,6 +192,7 @@ public class AppointmentController {
     //해당 약속 홈화면 정보 가져오기 **Notice disable!!
     @GetMapping("/appointment/{postIdx}")
     public BaseResponse getAppointmentHomeView(@PathVariable Long postIdx,@RequestParam Long userIdx){
+        System.out.println("hihihi");
         if(!userService.checkUserExist(userIdx)){
             return new BaseResponse(BaseResponseStatus.INVALID_USER);
         }

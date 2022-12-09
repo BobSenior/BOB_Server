@@ -218,8 +218,8 @@ public class VoteService {
                             .userIdx(idx)
                             .postIdx(roomIdx)
                             .flag(0)
-                            .content("투표가 생성되었습니다.")
-                            .type("makeVote")
+                            .content("create")
+                            .type("NewVote")
                             .build()
             );
         }
@@ -283,8 +283,7 @@ public class VoteService {
                 if(vr.getCount()<total_Num){
                     //reject changing
                     content="투표가 종료되었습니다";
-                    noticeType="VoteEnd";
-                    break;
+                    return;
                 }
                 String title = vote.getTitle();
                 StringTokenizer st = new StringTokenizer(title,"$",false);
@@ -333,7 +332,7 @@ public class VoteService {
                         Notice.builder()
                                 .userIdx(idx)
                                 .postIdx(postIdx)
-                                .type(voteType)
+                                .type(noticeType)
                                 .content(content)
                                 .flag(0)
                                 .build()

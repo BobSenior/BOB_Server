@@ -190,8 +190,11 @@ public class AppointmentService {
             Post post = postRepository.findPostByPostIdx(waiting.getPost().getPostIdx());
 
             String location_raw = post.getPlace();
-            StringTokenizer st = new StringTokenizer(location_raw,"$");
-            String location_real = st.nextToken();
+            String location_real = null;
+            if(location_raw!=null){
+                StringTokenizer st = new StringTokenizer(location_raw,"$");
+                location_real = st.nextToken();
+            }
 
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
@@ -432,16 +435,16 @@ public class AppointmentService {
             postParticipantRepository.changePostParticipationStatus("reject",postIdx,requesterIdx);
             result = "참가요청이 거절되었습니다";
             type="PAIReject";
+            noticeRepository.save(
+                    Notice.builder()
+                            .postIdx(postIdx)
+                            .userIdx(requesterIdx)
+                            .flag(0)
+                            .type("PAIReject")
+                            .content(result)
+                            .build()
+            );
         }
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(postIdx)
-                        .userIdx(requesterIdx)
-                        .flag(0)
-                        .type(type)
-                        .content(result)
-                        .build()
-        );
     }
 
 
@@ -561,15 +564,6 @@ public class AppointmentService {
 
         //참여 이후 만약 total과 같아질시 recruitment status를 "finish"로 바꾸기
         changeRecruitmentStatusIfFull(post, total, curr);
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(postIdx)
-                        .userIdx(user.getUserIdx())
-                        .flag(0)
-                        .type("Invited")
-                        .content("게시글에 초대되었습니다")
-                        .build()
-        );
     }
 
     private void changeRecruitmentStatusIfFull(Post post, int total, long curr) {
@@ -818,15 +812,6 @@ public class AppointmentService {
         long roomIdx = postRepository.findPostByPostIdx(postIdx).getChatRoomIdx();
         chatParticipantRepository.deleteByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(kickedIdx,roomIdx);
         postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx,kickedIdx);
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(0L)
-                        .userIdx(kickedIdx)
-                        .type("Banned")
-                        .content("약속에서 강퇴당했습니다")
-                        .flag(0)
-                        .build()
-        );
         Post post = postRepository.findPostByPostIdx(postIdx);
         if(post.getRecruitmentStatus().equals("finish")){
             post.setRecruitmentStatus("active");
