@@ -586,8 +586,11 @@ public class AppointmentService {
         System.out.println("list = " + list);
         for (Post post : list) {
             String location_raw = post.getPlace();
-            StringTokenizer st = new StringTokenizer(location_raw,"$");
-            String location_real = st.nextToken();
+            String location_real = null;
+            if(location_raw != null) {
+                StringTokenizer st = new StringTokenizer(location_raw, "$");
+                location_real = st.nextToken();
+            }
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
             long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
