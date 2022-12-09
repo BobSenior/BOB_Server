@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env: 
-  S3_BUCKET_NAME: bob-senior-deploy
+  S3_BUCKET_NAME: bobsenior-deploy-bucket
   PROJECT_NAME: bob-senior
 
 jobs:
