@@ -263,7 +263,6 @@ public class UserService {
         } else {
             log.error("ILLEGAL_ARG_ERROR when call UserRepository.checkNickname() because nickname is already used");
             throw new BaseException(SIGNUP_ALREADY_EXIST_ID);
-
         }
     }
 
