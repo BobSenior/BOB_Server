@@ -20,6 +20,8 @@ public class SimplifiedUserProfileDTO {
 
     private String school;
 
+    private String uuid;
+
     private boolean isOnline;
 
     //private String uuid;

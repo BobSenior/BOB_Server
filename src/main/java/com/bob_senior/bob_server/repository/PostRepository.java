@@ -44,14 +44,16 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     boolean existsByPostIdxAndRecruitmentStatus(Long postIdx, String status);
 
+    boolean existsByPostIdx(long postIdx);
+
     @Query(value = "select p.participantLimit from Post p where p.postIdx =:postIdx")
     int getMaximumParticipationNumFromPost(@Param("postIdx") Long postIdx);
 
     //activate이면서 + constraint가 ANY or input과 동일한 것들을 가져오기
     @Query(value = "select p from Post p " +
             "where p.recruitmentStatus = :status" +
-            " and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep)" +
-            " and p.meetingDate > :time" +
+            " and (p.participantConstraint = '아무나' or p.participantConstraint = :dep)" +
+            " and (p.meetingDate > :time or p.meetingDate is null )" +
             " and not exists" +
             " (select pp from PostParticipant pp " +
             "where pp.post.postIdx = p.postIdx and pp.userIdx = :userIdx and pp.status='active')")
@@ -59,8 +61,8 @@ public interface PostRepository extends JpaRepository<Post,Long> {
 
     @Query(value = "select p from Post p " +
             "where p.recruitmentStatus = 'active' " +
-            "and (p.participantConstraint = 'ANY' or p.participantConstraint = :dep) " +
-            "and p.meetingDate > :time " +
+            "and (p.participantConstraint = '아무나' or p.participantConstraint = :dep) " +
+            "and (p.meetingDate > :time or p.meetingDate is null) " +
             "and p.title LIKE %:title% " +
             "and not exists " +
             "(select pp from PostParticipant pp " +

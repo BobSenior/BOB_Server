@@ -15,6 +15,5 @@ public class ShownNotice {
 
     private String type;
 
-    private String text;
-
+    private long unreadChatNum;
 }

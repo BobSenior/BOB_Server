@@ -75,15 +75,6 @@ public class UserService {
                         .status("WAITING")
                         .build()
         );
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(0L)
-                        .userIdx(user.getUserIdx())
-                        .flag(0)
-                        .type("friendRequest")
-                        .content("친구 요청이 왔습니다")
-                        .build()
-        );
     }
 
     public List<SimplifiedUserProfileDTO> getRequestedFriendShipWaiting(Long userIdx, Pageable pageable) throws BaseException{
@@ -135,15 +126,6 @@ public class UserService {
             content = "친구요청이 거절되었습니다";
             type = "friendRequest_reject";
         }
-        noticeRepository.save(
-                Notice.builder()
-                        .userIdx(targetIdx)
-                        .postIdx(0L)
-                        .type(type)
-                        .content(content)
-                        .flag(0)
-                        .build()
-        );
     }
 
     public void makeBlock(Long myIdx, Long blockUserIdx) throws BaseException{

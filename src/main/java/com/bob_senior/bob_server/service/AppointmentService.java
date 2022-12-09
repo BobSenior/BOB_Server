@@ -70,10 +70,15 @@ public class AppointmentService {
 
     public AppointmentViewDTO getAppointmentData(Long postIdx,long userIdx) throws BaseException {
         Post post = postRepository.findPostByPostIdx(postIdx);
-        StringTokenizer st = new StringTokenizer(post.getPlace(),"$");
-        String location = st.nextToken();
-        String lat = st.nextToken();
-        String longt = st.nextToken();
+        String location = null;
+        String lat = null;
+        String longt = null;
+        if(post.getPlace() != null) {
+            StringTokenizer st = new StringTokenizer(post.getPlace(), "$");
+            location = st.nextToken();
+            lat = st.nextToken();
+            longt = st.nextToken();
+        }
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
 
@@ -83,9 +88,10 @@ public class AppointmentService {
             User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             buyer.add(
                     SimplifiedUserProfileDTO.builder()
+                            .uuid(user.getUuid())
                             .userIdx(user.getUserIdx())
                             .nickname(user.getNickName())
-                            .schoolId(user.getSchoolId())
+                            .schoolId(user.getSchoolId().substring(2,4))
                             .isOnline(false)
                             .school(user.getSchool())
                             .department(user.getDepartment())
@@ -96,9 +102,10 @@ public class AppointmentService {
             User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             receiver.add(
                     SimplifiedUserProfileDTO.builder()
+                            .uuid(user.getUuid())
                             .userIdx(user.getUserIdx())
                             .nickname(user.getNickName())
-                            .schoolId(user.getSchoolId())
+                            .schoolId(user.getSchoolId().substring(2,4))
                             .isOnline(false)
                             .school(user.getSchool())
                             .department(user.getDepartment())
@@ -135,7 +142,7 @@ public class AppointmentService {
                     .longitude(longt)
                     .maxBuyerNum(post.getMaxBuyerNum())
                     .maxReceiverNum(post.getMaxReceiverNum())
-                    .meetingAt(post.getMeetingDate())
+                    .meetingAt(post.getMeetingDate() == null?null : post.getMeetingDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
                     .fixVote(false)
                     .buyers(buyer)
                     .receivers(receiver)
@@ -155,7 +162,7 @@ public class AppointmentService {
                 .longitude(longt)
                 .maxBuyerNum(post.getMaxBuyerNum())
                 .maxReceiverNum(post.getMaxReceiverNum())
-                .meetingAt(post.getMeetingDate())
+                .meetingAt(post.getMeetingDate() == null ? null : post.getMeetingDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
                 .buyers(buyer)
                 .receivers(receiver)
                 .voteTitle(voteRepository.findVoteByPostIdxAndIsActivated(postIdx,1).getTitle())
@@ -183,8 +190,11 @@ public class AppointmentService {
             Post post = postRepository.findPostByPostIdx(waiting.getPost().getPostIdx());
 
             String location_raw = post.getPlace();
-            StringTokenizer st = new StringTokenizer(location_raw,"$");
-            String location_real = st.nextToken();
+            String location_real = null;
+            if(location_raw!=null){
+                StringTokenizer st = new StringTokenizer(location_raw,"$");
+                location_real = st.nextToken();
+            }
 
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
@@ -201,11 +211,11 @@ public class AppointmentService {
 
 
             SimplifiedUserProfileDTO writer_simp = SimplifiedUserProfileDTO.builder()
+                    .uuid(writer.getUuid())
                     .userIdx(writer.getUserIdx())
                     .nickname(writer.getNickName())
                     .department(writer.getDepartment())
-                            .schoolId(writer.getSchoolId())
-                                    .school(writer.getSchool())
+                            .schoolId(writer.getSchoolId().substring(2,4))
                                     .school(writer.getSchool())
                                             .build();
 
@@ -252,10 +262,11 @@ public class AppointmentService {
             User writer = userRepository.findUserByUserIdx(post.getWriterIdx());
 
             SimplifiedUserProfileDTO writer_simp = SimplifiedUserProfileDTO.builder()
+                    .uuid(writer.getUuid())
                     .userIdx(writer.getUserIdx())
                     .nickname(writer.getNickName())
                     .department(writer.getDepartment())
-                    .schoolId(writer.getSchoolId())
+                    .schoolId(writer.getSchoolId().substring(2,4))
                     .school(writer.getSchool())
                     .build();
 
@@ -340,6 +351,8 @@ public class AppointmentService {
     public boolean isOwnerOfPost(Long userIdx, Long postIdx) {
         //내가 해당 게시글의 owner인지 확인
         Post post = postRepository.findPostByPostIdx(postIdx);
+        System.out.println("post.getWriterIdx() = " + post.getWriterIdx());
+        System.out.println("userIdx = " + userIdx);
         return post.getWriterIdx() == userIdx;
     }
 
@@ -347,7 +360,7 @@ public class AppointmentService {
 
 
     public boolean isPostExist(Long postIdx) {
-        return postRepository.existsByPostIdxAndRecruitmentStatus(postIdx,"active");
+        return postRepository.existsByPostIdx(postIdx);
     }
 
 
@@ -364,11 +377,12 @@ public class AppointmentService {
                                     .position(participant.getPosition())
                                             .simp(
                                                     SimplifiedUserProfileDTO.builder()
+                                                            .uuid(user.getUuid())
                                                             .userIdx(user.getUserIdx())
                                                             .nickname(user.getNickName())
                                                             .department(user.getDepartment())
                                                             .school(user.getSchool())
-                                                            .schoolId(user.getSchoolId())
+                                                            .schoolId(user.getSchoolId().substring(2,4))
                                                             .build())     .build()
                                             );
         }
@@ -421,16 +435,16 @@ public class AppointmentService {
             postParticipantRepository.changePostParticipationStatus("reject",postIdx,requesterIdx);
             result = "참가요청이 거절되었습니다";
             type="PAIReject";
+            noticeRepository.save(
+                    Notice.builder()
+                            .postIdx(postIdx)
+                            .userIdx(requesterIdx)
+                            .flag(0)
+                            .type("PAIReject")
+                            .content(result)
+                            .build()
+            );
         }
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(postIdx)
-                        .userIdx(requesterIdx)
-                        .flag(0)
-                        .type(type)
-                        .content(result)
-                        .build()
-        );
     }
 
 
@@ -448,9 +462,11 @@ public class AppointmentService {
         for (Post post : posts) {
 
             String placeRaw = post.getPlace();
-            StringTokenizer st = new StringTokenizer(placeRaw,"$");
-            String location_read = st.nextToken();
-
+            String location_read = null;
+            if(placeRaw != null) {
+                StringTokenizer st = new StringTokenizer(placeRaw, "$");
+                location_read = st.nextToken();
+            }
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
             long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
@@ -475,8 +491,9 @@ public class AppointmentService {
                                             .userIdx(writer.getUserIdx())
                                             .nickname(writer.getNickName())
                                             .department(writer.getDepartment())
-                                            .schoolId(writer.getSchoolId())
+                                            .schoolId(writer.getSchoolId().substring(2,4))
                                             .school(writer.getSchool())
+                                            .uuid(writer.getUuid())
                                             .build()
                             )
                             .location(location_read)
@@ -547,15 +564,6 @@ public class AppointmentService {
 
         //참여 이후 만약 total과 같아질시 recruitment status를 "finish"로 바꾸기
         changeRecruitmentStatusIfFull(post, total, curr);
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(postIdx)
-                        .userIdx(user.getUserIdx())
-                        .flag(0)
-                        .type("Invited")
-                        .content("게시글에 초대되었습니다")
-                        .build()
-        );
     }
 
     private void changeRecruitmentStatusIfFull(Post post, int total, long curr) {
@@ -578,8 +586,11 @@ public class AppointmentService {
         System.out.println("list = " + list);
         for (Post post : list) {
             String location_raw = post.getPlace();
-            StringTokenizer st = new StringTokenizer(location_raw,"$");
-            String location_real = st.nextToken();
+            String location_real = null;
+            if(location_raw != null) {
+                StringTokenizer st = new StringTokenizer(location_raw, "$");
+                location_real = st.nextToken();
+            }
             long currNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"active");
 
             long waitingNum = postParticipantRepository.countByPost_PostIdxAndStatus(post.getPostIdx(),"waiting");
@@ -602,10 +613,11 @@ public class AppointmentService {
                             )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
+                                            .uuid(writer.getUuid())
                                             .userIdx(writer.getUserIdx())
                                             .nickname(writer.getNickName())
                                             .department(writer.getDepartment())
-                                            .schoolId(writer.getSchoolId())
+                                            .schoolId(writer.getSchoolId().substring(2,4))
                                             .school(writer.getSchool())
                                             .build()
                             )
@@ -660,10 +672,11 @@ public class AppointmentService {
                             )
                             .writer(
                                     SimplifiedUserProfileDTO.builder()
+                                            .uuid(writer.getUuid())
                                             .userIdx(writer.getUserIdx())
                                             .nickname(writer.getNickName())
                                             .department(writer.getDepartment())
-                                            .schoolId(writer.getSchoolId())
+                                            .schoolId(writer.getSchoolId().substring(2,4))
                                             .school(writer.getSchool())
                                             .build()
                             )
@@ -686,10 +699,15 @@ public class AppointmentService {
         //해당 post의 데이터 싸그리 가져오기
         Post post = postRepository.findPostByPostIdx(roomIdx);
         String location_raw = post.getPlace();
-        StringTokenizer st = new StringTokenizer(location_raw,"$");
-        String location_real = st.nextToken();
-        String latitude = st.nextToken();
-        String longitude = st.nextToken();
+        String location_real=null;
+        String latitude= null;
+        String longitude = null;
+        if(location_raw!=null) {
+            StringTokenizer st = new StringTokenizer(location_raw, "$");
+            location_real = st.nextToken();
+            latitude = st.nextToken();
+            longitude = st.nextToken();
+        }
 
         List<SimplifiedUserProfileDTO> buyer = new ArrayList<>();
         List<SimplifiedUserProfileDTO> receiver = new ArrayList<>();
@@ -700,11 +718,12 @@ public class AppointmentService {
             User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             buyer.add(
                     SimplifiedUserProfileDTO.builder()
+                            .uuid(user.getUuid())
                             .userIdx(user.getUserIdx())
                             .nickname(user.getNickName())
                             .department(user.getDepartment())
                             .school(user.getSchool())
-                            .schoolId(user.getSchoolId())
+                            .schoolId(user.getSchoolId().substring(2,4))
                             .build()
             );
         }
@@ -712,10 +731,11 @@ public class AppointmentService {
             User user = userRepository.findUserByUserIdx(participant.getUserIdx());
             receiver.add(
                     SimplifiedUserProfileDTO.builder()
+                            .uuid(user.getUuid())
                             .userIdx(user.getUserIdx())
                             .nickname(user.getNickName())
                             .department(user.getDepartment())
-                            .schoolId(user.getSchoolId())
+                            .schoolId(user.getSchoolId().substring(2,4)) //20 18 6286
                             .school(user.getSchool())
                             .build()
             );
@@ -737,7 +757,7 @@ public class AppointmentService {
                 .location(location_real)
                 .latitude(latitude)
                 .longitude(longitude)
-                .meetingAt(Timestamp.valueOf(post.getMeetingDate()))
+                .meetingAt(post.getMeetingDate()==null?null:Timestamp.valueOf(post.getMeetingDate()))
                 .buyer(buyer)
                 .receiver(receiver)
                 .contents(post.getContent())
@@ -795,25 +815,23 @@ public class AppointmentService {
         long roomIdx = postRepository.findPostByPostIdx(postIdx).getChatRoomIdx();
         chatParticipantRepository.deleteByChatNUser_UserIdxAndChatNUser_ChatRoomIdx(kickedIdx,roomIdx);
         postParticipantRepository.deleteByPost_PostIdxAndUserIdx(postIdx,kickedIdx);
-        noticeRepository.save(
-                Notice.builder()
-                        .postIdx(0L)
-                        .userIdx(kickedIdx)
-                        .type("Banned")
-                        .content("약속에서 강퇴당했습니다")
-                        .flag(0)
-                        .build()
-        );
         Post post = postRepository.findPostByPostIdx(postIdx);
         if(post.getRecruitmentStatus().equals("finish")){
             post.setRecruitmentStatus("active");
             postRepository.save(post);
         }
+        //유저의 record정보 싹다 지우기
+        voteParticipatedRepository.deleteVoteParticipatedByUserIdxAndVote(kickedIdx,voteRepository.getVoteByPostIdxAndIsActivated(postIdx,1));
     }
 
     @Transactional
-    public void makeNewPost(MakeNewPostReqDTO makeNewPostReqDTO) throws BaseException{
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public long makeNewPost(MakeNewPostReqDTO makeNewPostReqDTO) throws BaseException{
+
+        //이거
+        //시간이 1시라 HH로 인식이 안되거든요
+        //근데 이러면 12시를인식을 못함
+        //01:45로 보내주실수잇어요?
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime time = null;
         if(makeNewPostReqDTO.getMeetingAt() != null) {
             time = LocalDateTime.parse(makeNewPostReqDTO.getMeetingAt(), formatter);
@@ -832,7 +850,7 @@ public class AppointmentService {
         ChatRoom chatRoom = chatRoomRepository.findChatRoomByChatRoomName(uuid);
 
         //1. 일단 post부터 만들기
-        postRepository.save(
+        long datum = postRepository.save(
                 Post.builder()
                         .writerIdx(makeNewPostReqDTO.getWriterIdx())
                         .title(makeNewPostReqDTO.getTitle())
@@ -849,7 +867,7 @@ public class AppointmentService {
                         .participantConstraint(makeNewPostReqDTO.getConstraint())
                         .chatRoomIdx(chatRoom.getChatRoomIdx())
                         .build()
-        );
+        ).getPostIdx();
 
         Post post = postRepository.findPostByWriterIdxAndAndChatRoomIdx(makeNewPostReqDTO.getWriterIdx(), chatRoom.getChatRoomIdx());
 
@@ -908,7 +926,7 @@ public class AppointmentService {
                 );
             }
         }
-
+        return datum;
     }
 
     public void drawbackRequest(Long userIdx, Long postIdx) throws BaseException {

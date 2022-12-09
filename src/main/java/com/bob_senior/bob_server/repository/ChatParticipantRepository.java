@@ -30,7 +30,7 @@ public interface ChatParticipantRepository extends JpaRepository<ChatParticipant
 
     @Transactional
     @Modifying
-    @Query(value = "update ChatParticipant cp set cp.lastRead = :timestamp, cp.status = 'Q' where cp.chatNUser.chatRoomIdx = :roomIdx and cp.chatNUser.userIdx = :userIdx")
+    @Query(value = "update ChatParticipant cp set cp.lastRead = :timestamp where cp.chatNUser.chatRoomIdx = :roomIdx and cp.chatNUser.userIdx = :userIdx")
     void updateTimeStamp(@Param("timestamp") Timestamp ts, @Param("roomIdx") Long chatIdx, @Param("userIdx") Long userIdx);
 
     @Transactional

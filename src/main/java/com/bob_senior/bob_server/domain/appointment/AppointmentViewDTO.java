@@ -33,7 +33,7 @@ public class AppointmentViewDTO {
 
     private String type;
 
-    private LocalDateTime meetingAt;
+    private String meetingAt;
 
     private List<SimplifiedUserProfileDTO> buyers;
 

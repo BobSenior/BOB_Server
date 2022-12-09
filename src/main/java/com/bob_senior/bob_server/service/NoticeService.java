@@ -22,8 +22,8 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final ChatParticipantRepository chatParticipantRepository;
     private final ChatRepository chatRepository;
-
-
+    
+    
     @Autowired
     public NoticeService(NoticeRepository noticeRepository, ChatParticipantRepository chatParticipantRepository, ChatRepository chatRepository) {
         this.noticeRepository = noticeRepository;
@@ -40,31 +40,30 @@ public class NoticeService {
         List<Notice> notices = noticeRepository.findAllByUserIdxAndFlag(userIdx,0,pageable).getContent();
 
         long totalCount = 0;
-
-
+        
+        
         List<ChatParticipant> list = chatParticipantRepository.getAllByChatNUser_UserIdx(userIdx);
         for (ChatParticipant chatParticipant : list) {
             long roomIdx = chatParticipant.getChatNUser().getChatRoomIdx();
             totalCount+=getNumberOfUnreadChatByUserIdx(userIdx,roomIdx);
         }
-
+        
         ShownNotice chatNotice = ShownNotice.builder()
                 .postIdx(123123L)
                 .type("UnreadChat")
-                .text(""+totalCount)
+                .unreadChatNum(totalCount)
                 .build();
-
+        
         List<ShownNotice> lists = new ArrayList<>();
-
+        
         lists.add(chatNotice);
-
+        
         for (Notice notice : notices) {
             lists.add(
             ShownNotice.builder()
                     .noticeIdx(notice.getNoticeIdx())
                     .postIdx(notice.getPostIdx())
                     .type(notice.getType())
-                    .text(notice.getContent())
                     .build()
             );
         }
@@ -79,7 +78,8 @@ public class NoticeService {
             return chatRepository.countByChatRoomChatRoomIdx(roomIdx);
         }
         LocalDateTime lastRead = ts.toLocalDateTime();
-        return chatRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtIsAfter(roomIdx,lastRead);
+        System.out.println("lastRead = " + lastRead);
+        return chatRepository.countChatMessagesByChatRoom_ChatRoomIdxAndSentAtIsAfter(roomIdx,ts);
     }
 
 
