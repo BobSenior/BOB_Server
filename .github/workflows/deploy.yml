@@ -33,7 +33,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
         shell: bash
-        
+        env:
+          BOB_RDS_URL: ${{ secrets.BOB_RDS_URL }}
+          BOB_RDS_USERNAME: ${{ secrets.BOB_RDS_USERNAME }}
+          BOB_RDS_PASSWORD: ${{ secrets.BOB_RDS_PASSWORD }}
+          BOB_REDIS_HOST: ${{ secrets.BOB_REDIS_HOST }}
+          BOB_REDIS_PORT: ${{ secrets.BOB_REDIS_PORT }}
+          BOB_MAIL_USERNAME: ${{ secrets.BOB_MAIL_USERNAME }}
+          BOB_MAIN_PASSWORD: ${{ secrets.BOB_MAIN_PASSWORD }}
+          BOB_JWT_SECRETKEY: ${{ secrets.BOB_JWT_SECRETKEY }}
+
       - name: Make zip file
         run: zip -r ./$GITHUB_SHA.zip .
         shell: bash
