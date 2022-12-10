@@ -59,7 +59,7 @@ public class UserController {
     @RequestMapping("/health")
     public String healthString(){
         try{
-            return "HEALTH";
+            return "HEALTHport8081";
         }catch (Exception e){
             log.error(e);
             return "error";
