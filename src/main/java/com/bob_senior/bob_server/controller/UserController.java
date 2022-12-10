@@ -56,6 +56,16 @@ public class UserController {
         }
     }
 
+    @RequestMapping("/health")
+    public String healthString(){
+        try{
+            return "HEALTH";
+        }catch (Exception e){
+            log.error(e);
+            return "error";
+        }
+    }
+
 
     //회원가입
     @PostMapping("/signUp")
