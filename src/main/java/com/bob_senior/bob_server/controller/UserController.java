@@ -59,7 +59,7 @@ public class UserController {
     @RequestMapping("/health")
     public String healthString(){
         try{
-            return "무중단가보자고";
+            return "한번에 성공해보자고";
         }catch (Exception e){
             log.error(e);
             return "error";
