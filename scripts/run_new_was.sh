@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /home/ubuntu/.bashrc
+source /home/ubuntu/.deploy_env
 
 CURRENT_PORT=$(cat /home/ubuntu/service_url.inc | grep -Po '[0-9]+' | tail -1)
 TARGET_PORT=0
