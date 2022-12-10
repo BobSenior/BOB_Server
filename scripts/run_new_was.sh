@@ -20,6 +20,8 @@ if [ ! -z ${TARGET_PID} ]; then
   sudo kill ${TARGET_PID}
 fi
 
-nohup java -jar -Dserver.port=${TARGET_PORT} /home/ubuntu/var/www/BOB_Server/build/libs/* --spring.profiles.active=prod > /home/ubuntu/var/www/BOB_Server/nohup.out 2>&1 &
+
+
+nohup java -jar -Dserver.port=${TARGET_PORT} /home/ubuntu/var/www/BOB_Server/build/libs/*.jar --spring.profiles.active=prod &
 echo "> Now new WAS runs at ${TARGET_PORT}."
 exit 0
