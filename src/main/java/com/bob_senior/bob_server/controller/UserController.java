@@ -59,7 +59,7 @@ public class UserController {
     @RequestMapping("/health")
     public String healthString(){
         try{
-            return "한번에 성공해보자고";
+            return "진짜 마지막 다시 port 8081";
         }catch (Exception e){
             log.error(e);
             return "error";
