@@ -16,33 +16,19 @@ spring:
     username: ${BOB_RDS_USERNAME}
     password: ${BOB_RDS_PASSWORD}
 
+    redis:
+      host: ${BOB_REDIS_HOST}
+      port: ${BOB_REDIS_PORT}
 
-  redis:
-    host: ${BOB_REDIS_HOST}
-    port: ${BOB_REDIS_PORT}
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${BOB_MAIL_USERNAME}
+    password: ${BOB_MAIN_PASSWORD}
 
-    mail:
-      host: smtp.gmail.com
-      port: 587
-      username: ${BOB_MAIL_USERNAME}
-      password: ${BOB_MAIN_PASSWORD}
-
-      properties:
-        mail.smtp.auth: true
-        mail.smtp.starttls.enable: true
-
-
-cloud:
-  aws:
-    credentials:
-      accessKey: ${BOB_S3_ACCESSKEY}
-      secretKey: ${BOB_S3_SECRETKEY}
-    s3:
-      bucket: ${BOB_S3_BUCKET}
-    region:
-      static: ${BOB_S3_REGION}
-    stack:
-      auto: false
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 
 logging:
@@ -55,6 +41,22 @@ logging:
 
 jwt:
   secret: ${BOB_JWT_SECRETKEY}
+
+
+#cloud:
+#  aws:
+#    credentials:
+#      accessKey: ${BOB_S3_ACCESSKEY}
+#      secretKey: ${BOB_S3_SECRETKEY}
+#    s3:
+#      bucket: ${BOB_S3_BUCKET}
+#    region:
+#      static: ${BOB_S3_REGION}
+#    stack:
+#      auto: false
+
+
+
 
 
 #bob:
